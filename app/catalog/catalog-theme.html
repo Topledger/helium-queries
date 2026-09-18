@@ -272,6 +272,17 @@
     .filter-row input:focus, .filter-row select:focus {
       border-color: rgba(168,85,247,0.4); box-shadow: 0 0 0 2px var(--purple-soft);
     }
+    .filter-row input[type="date"] {
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .filter-row input[type="date"]::-webkit-calendar-picker-indicator {
+      display: none;
+      -webkit-appearance: none;
+    }
+    .filter-row input[type="date"]::-webkit-inner-spin-button {
+      display: none;
+    }
 
     .maker-select { position: relative; max-width: none; width: 100%; z-index: 1; }
     .maker-select.open { z-index: 8; }
