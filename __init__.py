@@ -2,6 +2,8 @@
 
     queries/delegation/<query_name>.sql
     queries/gateway/<query_name>.sql
+    queries/iot/<query_name>.sql
+    queries/mobile/<query_name>.sql
     queries/hotspot/<query_name>.sql
     queries/meta/<query_name>.sql
     queries/network/<query_name>.sql
@@ -32,46 +34,46 @@ HOTSPOT_METRICS = _load('HOTSPOT_METRICS', subdir='hotspot')
 HOTSPOT_BY_MAKER = _load('HOTSPOT_BY_MAKER', subdir='hotspot')
 HOTSPOT_MAKERS = _load('HOTSPOT_MAKERS', subdir='hotspot')
 
+# iot — rewards, gateway packet/data, and network packet leaderboards
+IOT_HOTSPOT_REWARD_DAILY = _load('IOT_HOTSPOT_REWARD_DAILY', subdir='iot')
+IOT_HOTSPOT_REWARD_TOTAL = _load('IOT_HOTSPOT_REWARD_TOTAL', subdir='iot')
+IOT_NETWORK_REWARD_DAILY = _load('IOT_NETWORK_REWARD_DAILY', subdir='iot')
+IOT_NETWORK_REWARD_TOTAL = _load('IOT_NETWORK_REWARD_TOTAL', subdir='iot')
+IOT_GATEWAY_DATA_SUM = _load('IOT_GATEWAY_DATA_SUM', subdir='iot')
+IOT_GATEWAY_DATA = _load('IOT_GATEWAY_DATA', subdir='iot')
+IOT_REGIONS = _load('IOT_REGIONS', subdir='iot')
+IOT_DATARATES = _load('IOT_DATARATES', subdir='iot')
+IOT_PACKETS_DAILY = _load('IOT_PACKETS_DAILY', subdir='iot')
+IOT_TOP_HOTSPOTS_BY_PACKET_COUNT = _load('IOT_TOP_HOTSPOTS_BY_PACKET_COUNT', subdir='iot')
+IOT_TOP_HOTSPOTS_BY_PAYLOAD_SIZE = _load('IOT_TOP_HOTSPOTS_BY_PAYLOAD_SIZE', subdir='iot')
+
+# mobile — one SQL file per UI endpoint (queries/mobile/<name>.sql)
+NETWORK_MOBILE_DAILY_REWARD = _load('NETWORK_MOBILE_DAILY_REWARD', subdir='mobile')
+GATEWAY_MOBILE_DAILY_REWARD = _load('GATEWAY_MOBILE_DAILY_REWARD', subdir='mobile')
+GATEWAY_MOBILE_DATA = _load('GATEWAY_MOBILE_DATA', subdir='mobile')
+GATEWAY_MOBILE_DATA_SUM = _load('GATEWAY_MOBILE_DATA_SUM', subdir='mobile')
+GATEWAY_MOBILE_SPEEDTEST_AVERAGES = _load('GATEWAY_MOBILE_SPEEDTEST_AVERAGES', subdir='mobile')
+GATEWAY_MOBILE_HEARTBEAT_HOURS = _load('GATEWAY_MOBILE_HEARTBEAT_HOURS', subdir='mobile')
+NETWORK_MOBILE_DATA = _load('NETWORK_MOBILE_DATA', subdir='mobile')
+NETWORK_MOBILE_HEARTBEAT_HOURS = _load('NETWORK_MOBILE_HEARTBEAT_HOURS', subdir='mobile')
+
 # relay
 RELAY_IOT_REWARD_SHARES = _load('RELAY_IOT_REWARD_SHARES', subdir='relay')
 RELAY_IOT_REWARD_TOTALS = _load('RELAY_IOT_REWARD_TOTALS', subdir='relay')
 RELAY_IOT_REWARD_SHARES_COUNT = _load('RELAY_IOT_REWARD_SHARES_COUNT', subdir='relay')
 RELAY_IOT_REWARD_TOTALS_COUNT = _load('RELAY_IOT_REWARD_TOTALS_COUNT', subdir='relay')
-RELAY_MOBILE_REWARD_SHARES = _load('RELAY_MOBILE_REWARD_SHARES', subdir='relay')
-RELAY_MOBILE_REWARD_TOTALS = _load('RELAY_MOBILE_REWARD_TOTALS', subdir='relay')
 
 # gateway
 GATEWAY_IOT_REWARDS = _load('GATEWAY_IOT_REWARDS', subdir='gateway')
 GATEWAY_IOT_REWARDS_SUM = _load('GATEWAY_IOT_REWARDS_SUM', subdir='gateway')
 GATEWAY_IOT_REWARDS_SUM_TOTAL = _load('GATEWAY_IOT_REWARDS_SUM_TOTAL', subdir='gateway')
 GATEWAY_IOT_REWARDS_SUM_BUCKETED = _load('GATEWAY_IOT_REWARDS_SUM_BUCKETED', subdir='gateway')
-GATEWAY_IOT_DATA = _load('GATEWAY_IOT_DATA', subdir='gateway')
-GATEWAY_IOT_DATA_SUM = _load('GATEWAY_IOT_DATA_SUM', subdir='gateway')
-GATEWAY_IOT_DATA_BY_REGION = _load('GATEWAY_IOT_DATA_BY_REGION', subdir='gateway')
-GATEWAY_IOT_DATA_BY_DATARATE = _load('GATEWAY_IOT_DATA_BY_DATARATE', subdir='gateway')
-GATEWAY_IOT_RF = _load('GATEWAY_IOT_RF', subdir='gateway')
-GATEWAY_IOT_DATA_FREE_PAID = _load('GATEWAY_IOT_DATA_FREE_PAID', subdir='gateway')
-GATEWAY_IOT_DATA_DUPLICATES = _load('GATEWAY_IOT_DATA_DUPLICATES', subdir='gateway')
-GATEWAY_MOBILE_REWARDS = _load('GATEWAY_MOBILE_REWARDS', subdir='gateway')
-GATEWAY_MOBILE_REWARDS_SUM = _load('GATEWAY_MOBILE_REWARDS_SUM', subdir='gateway')
-GATEWAY_MOBILE_REWARDS_SUM_TOTAL = _load('GATEWAY_MOBILE_REWARDS_SUM_TOTAL', subdir='gateway')
-GATEWAY_MOBILE_REWARDS_SUM_BUCKETED = _load('GATEWAY_MOBILE_REWARDS_SUM_BUCKETED', subdir='gateway')
-GATEWAY_MOBILE_DATA = _load('GATEWAY_MOBILE_DATA', subdir='gateway')
-GATEWAY_MOBILE_DATA_SUM = _load('GATEWAY_MOBILE_DATA_SUM', subdir='gateway')
-GATEWAY_MOBILE_SPEEDTEST_AVERAGES = _load('GATEWAY_MOBILE_SPEEDTEST_AVERAGES', subdir='gateway')
-GATEWAY_MOBILE_HEARTBEAT_HOURS = _load('GATEWAY_MOBILE_HEARTBEAT_HOURS', subdir='gateway')
-RADIO_REWARDS_SUM = _load('RADIO_REWARDS_SUM', subdir='gateway')
-
+GATEWAY_IOT_DATA = IOT_GATEWAY_DATA
+GATEWAY_IOT_DATA_SUM = IOT_GATEWAY_DATA_SUM
 # network
 NETWORK_IOT_DATA = _load('NETWORK_IOT_DATA', subdir='network')
 NETWORK_IOT_DATA_BY_REGION = _load('NETWORK_IOT_DATA_BY_REGION', subdir='network')
 NETWORK_IOT_REWARDED_GATEWAYS = _load('NETWORK_IOT_REWARDED_GATEWAYS', subdir='network')
-NETWORK_MOBILE_DATA = _load('NETWORK_MOBILE_DATA', subdir='network')
-NETWORK_MOBILE_REWARDED_GATEWAYS = _load('NETWORK_MOBILE_REWARDED_GATEWAYS', subdir='network')
-NETWORK_MOBILE_REWARDED_SUBSCRIBERS = _load('NETWORK_MOBILE_REWARDED_SUBSCRIBERS', subdir='network')
-NETWORK_MOBILE_REWARDED_RADIOS = _load('NETWORK_MOBILE_REWARDED_RADIOS', subdir='network')
-NETWORK_MOBILE_HEARTBEAT_HOURS = _load('NETWORK_MOBILE_HEARTBEAT_HOURS', subdir='network')
-
 # oui
 OUI_DATA = _load('OUI_DATA', subdir='oui')
 OUI_PACKET_SIZE_DISTRIBUTION = _load('OUI_PACKET_SIZE_DISTRIBUTION', subdir='oui')

@@ -1,4 +1,5 @@
 -- query_name: GATEWAY_MOBILE_DATA
+-- UI: Gateway mobile data → GET /gateways/<address>/mobile/data
 SELECT
     d.report.pubkey                                                         AS "hotspotKey",
     hk.asset_id                                                             AS "assetId",

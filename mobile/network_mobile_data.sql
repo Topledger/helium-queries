@@ -1,4 +1,5 @@
 -- query_name: NETWORK_MOBILE_DATA
+-- UI: Network mobile daily data → GET /v1/helium/l2/network/mobile/data
 SELECT
     CASE
         WHEN '{bucket}' = 'total'

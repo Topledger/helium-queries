@@ -1,4 +1,5 @@
 -- query_name: GATEWAY_MOBILE_DATA_SUM
+-- UI: Gateway mobile daily data sums → GET /v1/helium/l2/gateways/<address>/mobile/data/sum
 SELECT
     hk.hotspot_key                                                          AS "hotspotKey",
     hk.asset_id                                                             AS "assetId",

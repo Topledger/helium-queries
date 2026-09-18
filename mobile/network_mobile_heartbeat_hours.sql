@@ -1,4 +1,5 @@
 -- query_name: NETWORK_MOBILE_HEARTBEAT_HOURS
+-- UI: Network mobile daily heartbeat hours → GET /v1/helium/l2/network/mobile/heartbeat-hours
 WITH hourly AS (
     SELECT
         h.pubkey,

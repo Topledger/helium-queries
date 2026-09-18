@@ -1,4 +1,5 @@
 -- query_name: GATEWAY_MOBILE_SPEEDTEST_AVERAGES
+-- UI: Gateway mobile daily speedtest averages → GET /v1/helium/l2/gateways/<address>/mobile/speedtests/averages
 SELECT
     hk.hotspot_key                                                          AS "hotspotKey",
     hk.asset_id                                                             AS "assetId",

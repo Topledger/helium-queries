@@ -3,11 +3,13 @@ Topledger parameterized SQL queries for the Helium Oracle Data Table API.
 SQL lives in topic folders under `helium_oracle_api/queries/`:
 
     delegation/   HNT stake and vote-proxy queries
-    gateway/      per-gateway IoT, mobile, and radio queries
+    gateway/      per-gateway IoT reward queries
     hotspot/      hotspot search and lookup
-    network/      network-wide IoT and mobile rollups
+    iot/          IoT rewards, gateway packet/data, and network packet leaderboards
+    mobile/       Mobile rewards, gateway data, radio stats, and network rollups
+    network/      network-wide IoT rollups
     oui/          OUI packet and DC usage
-    relay/        L2 reward-share and totals
+    relay/        L2 IoT reward-share and totals
     meta/         table freshness
 
 These are *Topledger saved-query* templates: parameters are written in the

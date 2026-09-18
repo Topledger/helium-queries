@@ -1,6 +1,5 @@
--- query_name: GATEWAY_IOT_RF
+-- query_name: IOT_GATEWAY_DATA_SUM
 SELECT
-    hk.hotspot_key                                                          AS "hotspotKey",
     CASE
         WHEN '{bucket}' = 'total'
             THEN '{start_date}'
@@ -21,17 +20,15 @@ SELECT
              )
     END                                                                     AS "bucketStart",
     count(*)                                                                AS "packetCount",
-    avg(p.rssi)                                                             AS "avgRssi",
-    min(p.rssi)                                                             AS "minRssi",
-    max(p.rssi)                                                             AS "maxRssi",
-    avg(p.snr)                                                              AS "avgSnr",
-    min(p.snr)                                                              AS "minSnr",
-    max(p.snr)                                                              AS "maxSnr",
-    avg(p.frequency)                                                        AS "avgFrequency"
+    sum(coalesce(cast(p.payloadsize AS bigint), 0))                         AS "totalPayloadSize",
+    count(CASE WHEN lower(cast(p.type AS varchar)) = 'join' THEN 1 END)
+                                                                            AS "joinCount",
+    count(CASE WHEN lower(cast(p.type AS varchar)) = 'uplink' THEN 1 END)
+                                                                            AS "uplinkCount"
 FROM helium_oracle_iot.packetreport p
 JOIN helium.hotspot_keys hk
   ON hk.hotspot_key = p.gateway
 WHERE p.partition_0 BETWEEN '{start_date}' AND '{end_date}'
   {lookup_filter}
-GROUP BY 1, 2
-ORDER BY 2
+GROUP BY 1
+ORDER BY 1

@@ -1,4 +1,5 @@
 -- query_name: GATEWAY_MOBILE_HEARTBEAT_HOURS
+-- UI: Gateway mobile heartbeat hours → GET /v1/helium/l2/gateways/<address>/mobile/heartbeat-hours
 SELECT
     hk.hotspot_key                                                          AS "hotspotKey",
     hk.asset_id                                                             AS "assetId",
