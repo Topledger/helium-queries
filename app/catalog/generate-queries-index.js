@@ -21,12 +21,14 @@ function resolveQueriesRoot() {
   return fromFile;
 }
 
+const SQL_DIR = 'sql';
+
 const REPO_ROOT = resolveQueriesRoot();
-const QUERIES = REPO_ROOT;
+const QUERIES = path.join(REPO_ROOT, SQL_DIR);
 const OUT = path.join(REPO_ROOT, 'index.html');
 const STYLE_SRC = path.join(REPO_ROOT, 'app', 'catalog', 'catalog-theme.html');
 
-const SKIP_QUERY_DIRS = new Set(['app', 'pipeline', 'scripts', 'node_modules', '.git']);
+const SKIP_QUERY_DIRS = new Set([]);
 
 require('dotenv').config({ path: path.join(REPO_ROOT, '.env') });
 
@@ -1146,7 +1148,7 @@ const SAMPLE_VIEW_STYLES = `
 function buildHeliumApisCatalogHtml(options = {}) {
   const { endpoints, groups, dates } = collectEndpoints(options.baseUrl);
   if (!endpoints.length) {
-    throw new Error('No Helium query endpoints found under queries/');
+    throw new Error(`No Helium query endpoints found under ${SQL_DIR}/`);
   }
   const firstId = endpoints[0].id;
   const styles = extractStyles() + SAMPLE_VIEW_STYLES;

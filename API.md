@@ -1,6 +1,6 @@
 # Helium Oracle Query API
 
-Trino-backed HTTP API for SQL in `queries/`. Each endpoint runs one `.sql` file with bound parameters (see `pipeline/helium_query_bind.py`).
+Trino-backed HTTP API for SQL in `sql/`. Each endpoint runs one `.sql` file with bound parameters (see `pipeline/helium_query_bind.py`).
 
 **Catalog:** `GET http://84.32.71.101:8137/api/helium`
 

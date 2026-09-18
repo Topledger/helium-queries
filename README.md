@@ -6,7 +6,7 @@ Helium Oracle SQL definitions plus a **standalone catalog + JSON API** sub-app. 
 
 | Path | Purpose |
 |------|---------|
-| `delegation/`, `iot/`, `mobile/`, … | SQL query groups |
+| `sql/delegation/`, `sql/iot/`, `sql/mobile/`, … | SQL query groups |
 | `app/catalog/` | HTML API catalog generator |
 | `app/lib/` | Query param parsing + execution |
 | `app/server.js` | Standalone HTTP server |

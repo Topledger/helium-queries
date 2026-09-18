@@ -1,14 +1,8 @@
 """Helium Oracle SQL queries — one file per query, grouped by folder.
 
-    queries/delegation/<query_name>.sql
-    queries/gateway/<query_name>.sql
-    queries/iot/<query_name>.sql
-    queries/mobile/<query_name>.sql
-    queries/hotspot/<query_name>.sql
-    queries/meta/<query_name>.sql
-    queries/network/<query_name>.sql
-    queries/oui/<query_name>.sql
-    queries/relay/<query_name>.sql
+    queries/sql/delegation/<query_name>.sql
+    queries/sql/gateway/<query_name>.sql
+    … (one folder per topic under queries/sql/)
 
 Register here, e.g.:
 
@@ -17,11 +11,11 @@ Register here, e.g.:
 
 from pathlib import Path
 
-_QUERIES_DIR = Path(__file__).parent
+_SQL_DIR = Path(__file__).parent / "sql"
 
 
 def _load(name: str, subdir: str = "") -> str:
-    base = _QUERIES_DIR / subdir if subdir else _QUERIES_DIR
+    base = _SQL_DIR / subdir if subdir else _SQL_DIR
     path = base / f"{name.lower()}.sql"
     return path.read_text(encoding="utf-8")
 
