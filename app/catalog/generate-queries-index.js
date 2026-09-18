@@ -69,30 +69,98 @@ const FRAGMENT_TO_PARAMS = {
   free_filter: ['free'],
 };
 
+const PARAM_DISPLAY_ORDER = [
+  'start_date',
+  'end_date',
+  'bucket',
+  'min_date',
+  'address',
+  'entity_key',
+  'asset_id',
+  'key_to_asset_key',
+  'wallet',
+  'role',
+  'oui_id',
+  'cbsd_id',
+  'authority',
+  'nft_mint',
+  'sub_dao',
+  'network',
+  'maker',
+  'status',
+  'packet_type',
+  'free',
+  'offset',
+  'limit',
+];
+
 const PARAM_META = {
-  start_date: { desc: 'Inclusive lower bound on partition_0.' },
-  end_date: { desc: 'Inclusive upper bound on partition_0.' },
-  entity_key: { desc: 'Helium entity key (optional).' },
-  address: { desc: 'Hotspot / gateway pubkey (base58).' },
-  bucket: { desc: 'hour | day | week | total' },
-  offset: { desc: 'Pagination offset.' },
-  limit: { desc: 'Pagination limit.' },
-  oui_id: { desc: 'LoRaWAN OUI id.' },
-  cbsd_id: { desc: 'Mobile radio CBSD id.' },
-  min_date: { desc: 'Partition floor (meta freshness).' },
-  now_ts: { desc: 'Unix seconds reference time (optional).' },
-  wallet: { desc: 'Solana wallet pubkey.' },
-  role: { desc: 'owner | proxy (wallet proxies).' },
-  nft_mint: { desc: 'Stake NFT mint.' },
-  sub_dao: { desc: 'Sub-DAO mint address.' },
-  network: { desc: 'Mobile | IoT shorthand.' },
-  authority: { desc: 'Position authority.' },
-  status: { desc: 'delegated | undelegated' },
-  maker: { desc: 'Hotspot maker pubkey.' },
-  asset_id: { desc: 'Hotspot asset id.' },
-  key_to_asset_key: { desc: 'Key-to-asset pubkey.' },
-  packet_type: { desc: 'IoT packet type (alias: type).' },
-  free: { desc: 'true | false' },
+  start_date: { desc: '' },
+  end_date: { desc: '' },
+  entity_key: { desc: '' },
+  address: { desc: '' },
+  bucket: { desc: '' },
+  offset: { desc: '' },
+  limit: { desc: '' },
+  oui_id: { desc: '' },
+  cbsd_id: { desc: '' },
+  min_date: { desc: '' },
+  now_ts: { desc: '' },
+  wallet: { desc: '' },
+  role: { desc: '' },
+  nft_mint: { desc: '' },
+  sub_dao: { desc: '' },
+  network: { desc: '' },
+  authority: { desc: '' },
+  status: { desc: '' },
+  maker: { desc: '' },
+  asset_id: { desc: '' },
+  key_to_asset_key: { desc: '' },
+  packet_type: { desc: '' },
+  free: { desc: '' },
+};
+
+/** Reference docs for Methods card (not shown under parameter inputs). */
+const PARAM_METHOD_DOCS = {
+  start_date: {
+    type: 'date (YYYY-MM-DD)',
+    default: '7 days before today',
+    desc: 'Inclusive lower bound on partition_0. With bucket day/week/hour, one row per bucket in this range.',
+  },
+  end_date: {
+    type: 'date (YYYY-MM-DD)',
+    default: 'today',
+    desc: 'Inclusive upper bound on partition_0.',
+  },
+  bucket: {
+    type: 'hour | day | week | total',
+    default: 'day',
+    desc: 'Rollup granularity inside the date range. total = single row for the whole window.',
+  },
+  min_date: {
+    type: 'date (YYYY-MM-DD)',
+    default: '2024-01-01',
+    desc: 'Partition floor (meta freshness query).',
+  },
+  entity_key: { type: 'string', default: 'empty (all)', desc: 'Helium entity key filter.' },
+  address: { type: 'string', default: 'empty (all)', desc: 'Hotspot / gateway signing pubkey (base58).' },
+  asset_id: { type: 'string', default: 'empty', desc: 'Hotspot compressed-NFT asset id.' },
+  key_to_asset_key: { type: 'string', default: 'empty', desc: 'Key-to-asset account pubkey.' },
+  wallet: { type: 'string', default: 'empty', desc: 'Solana wallet pubkey.' },
+  role: { type: 'owner | proxy', default: 'owner', desc: 'Wallet proxy role (wallet_proxies).' },
+  oui_id: { type: 'string', default: '—', desc: 'LoRaWAN OUI id (alias query param: oui). Required for OUI endpoints.' },
+  cbsd_id: { type: 'string', default: 'empty', desc: 'Mobile radio CBSD id.' },
+  offset: { type: 'integer', default: '0', desc: 'Pagination offset (SQL OFFSET).' },
+  limit: { type: 'integer', default: '100', desc: 'Pagination limit (SQL LIMIT).' },
+  nft_mint: { type: 'string', default: 'empty', desc: 'Stake NFT mint.' },
+  sub_dao: { type: 'string', default: 'empty', desc: 'Sub-DAO mint address.' },
+  network: { type: 'Mobile | IoT', default: 'empty', desc: 'Network shorthand (maps to sub-DAO mint).' },
+  authority: { type: 'string', default: 'empty', desc: 'Position authority (alias: position_authority).' },
+  status: { type: 'delegated | undelegated', default: 'empty', desc: 'Delegation status filter.' },
+  maker: { type: 'string', default: 'empty', desc: 'Hotspot maker pubkey.' },
+  packet_type: { type: 'string', default: 'empty', desc: 'IoT packet type (alias: type).' },
+  free: { type: 'true | false', default: 'empty', desc: 'Free vs paid IoT packets.' },
+  now_ts: { type: 'integer (unix s)', default: 'current UTC', desc: 'Reference time for delegation lock / voting power.' },
 };
 
 function parseHeader(sql) {
@@ -130,7 +198,17 @@ function apiParamsForSql(sql) {
     if (FRAGMENT_TO_PARAMS[key]) FRAGMENT_TO_PARAMS[key].forEach((p) => params.add(p));
     else params.add(key);
   }
-  return [...params].sort((a, b) => a.localeCompare(b));
+  return sortParamsForDisplay([...params]);
+}
+
+function sortParamsForDisplay(params) {
+  const rank = new Map(PARAM_DISPLAY_ORDER.map((p, i) => [p, i]));
+  return params.sort((a, b) => {
+    const ra = rank.has(a) ? rank.get(a) : 1000;
+    const rb = rank.has(b) ? rank.get(b) : 1000;
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
+  });
 }
 
 /** Output column descriptions (camelCase keys match SQL AS "…" aliases). */
@@ -429,6 +507,127 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+function paramMethodType(f) {
+  const doc = PARAM_METHOD_DOCS[f.name];
+  if (doc?.type) return doc.type;
+  if (f.type === 'date') return 'date (YYYY-MM-DD)';
+  if (f.type === 'select' && f.options?.length) return f.options.join(' | ');
+  if (f.name === 'offset' || f.name === 'limit' || f.name === 'now_ts') return 'integer';
+  return 'string';
+}
+
+function paramMethodDefault(f) {
+  if (f.default !== undefined && String(f.default) !== '') return String(f.default);
+  const doc = PARAM_METHOD_DOCS[f.name];
+  return doc?.default || '—';
+}
+
+function paramMethodDesc(f) {
+  const doc = PARAM_METHOD_DOCS[f.name];
+  return doc?.desc || '—';
+}
+
+function buildSingleParamUrl(path, name, value) {
+  const base = path + '?' + encodeURIComponent(name) + '=';
+  if (value === undefined || value === null || String(value) === '') return base;
+  return base + encodeURIComponent(String(value));
+}
+
+/** Static examples for per-parameter GET lines (do not sync with Request form). */
+const PARAM_EXAMPLE_VALUES = {
+  start_date: '2026-09-01',
+  end_date: '2026-09-18',
+  min_date: '2024-01-01',
+  bucket: 'day',
+  offset: '0',
+  limit: '25',
+  address: '112abcXYZexampleHotspotGatewayPubkey111111111',
+  entity_key: '0123456789abcdef',
+  asset_id: 'asset_example_id',
+  key_to_asset_key: 'keyToAssetExample111111111111111111111',
+  wallet: '7EqQdE8HwpvNh7Z1Q8K9m2pL3vR4sT5uV6wX7yZ8aB9cD0eF',
+  oui_id: '001122',
+  cbsd_id: '48A0B90123456789',
+  nft_mint: 'StakeNftMintExample11111111111111111111111',
+  sub_dao: '39Lw1RH6zt8AJvKn3BTxmUDofzduCM2J3kSaGDZ8L7Sk',
+  network: 'IoT',
+  authority: 'AuthExample1111111111111111111111111111111',
+  maker: 'MakerExample11111111111111111111111111111111',
+  role: 'owner',
+  status: 'delegated',
+  packet_type: 'uplink',
+  free: 'false',
+  now_ts: '1726531200',
+};
+
+function paramExampleForUrl(f) {
+  if (f.default !== undefined && String(f.default) !== '') return String(f.default);
+  if (PARAM_EXAMPLE_VALUES[f.name]) return PARAM_EXAMPLE_VALUES[f.name];
+  if (f.type === 'date') return '2026-09-01';
+  if (f.type === 'select' && f.options?.length) return String(f.options[0]);
+  return 'example';
+}
+
+function renderMethodParam(f, item) {
+  const reqLabel = f.required ? 'Required' : 'Optional';
+  const reqClass = f.required ? 'required' : 'optional';
+  const def = paramMethodDefault(f);
+  const hasDefault = def !== '—' && def !== 'empty (all)' && def !== 'empty';
+  let usage = '';
+  if (f.required) {
+    usage = 'You must include this in every request.';
+  } else if (hasDefault) {
+    usage = `If you omit it, the server uses <code>${esc(def)}</code>.`;
+  } else {
+    usage = 'Optional — omit unless you need to filter by this field.';
+  }
+  const paramUrl = buildSingleParamUrl(item.path, f.name, paramExampleForUrl(f));
+
+  return `<article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">${esc(f.name)}</code>
+      <span class="req-pill ${reqClass}">${reqLabel}</span>
+      <span class="type-pill">${esc(paramMethodType(f))}</span>
+    </div>
+    <p class="method-param-desc">${esc(paramMethodDesc(f))}</p>
+    <p class="method-param-usage">${usage}</p>
+    <div class="method-param-url-row">
+      <code class="method-param-url" data-param="${esc(f.name)}">${esc(paramUrl)}</code>
+    </div>
+  </article>`;
+}
+
+const SECTION_CHEVRON =
+  '<svg class="section-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+
+const COPY_BTN_ICONS =
+  '<svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+  '<svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+
+function renderCopyIconButton(className, title, extraAttrs = '') {
+  const t = esc(title);
+  return `<button class="icon-btn ${className}" type="button" title="${t}" aria-label="${t}" data-copy-title="${t}"${extraAttrs}>${COPY_BTN_ICONS}</button>`;
+}
+
+function renderCollapsibleSection(title, innerBody, options = {}) {
+  const open = options.open === true;
+  const bodyClass = options.bodyClass || '';
+  const bodyStyle = options.bodyStyle || '';
+  return `<details class="section-card section-collapse methods-card"${open ? ' open' : ''}>
+      <summary class="section-card-head section-collapse-summary">${SECTION_CHEVRON}<span>${esc(title)}</span></summary>
+      <div class="section-card-body${bodyClass ? ' ' + bodyClass : ''}"${bodyStyle ? ` style="${bodyStyle}"` : ''}>${innerBody}</div>
+    </details>`;
+}
+
+function renderParametersDocCard(item) {
+  if (!item.filters.length) return '';
+  const paramBlocks = item.filters.map((f) => renderMethodParam(f, item)).join('');
+  return renderCollapsibleSection(
+    'Parameters',
+    `<div class="method-param-list">${paramBlocks}</div>`
+  );
+}
+
 function renderFilter(f, itemId) {
   const fid = `f-${itemId}-${f.name}`;
   let input = '';
@@ -442,11 +641,9 @@ function renderFilter(f, itemId) {
   } else {
     input = `<input id="${fid}" type="text" data-name="${esc(f.name)}" value="${esc(f.default || '')}" placeholder="${esc(f.name)}">`;
   }
-  const labelTitle = f.description ? ` title="${esc(f.description)}"` : '';
   return `<div class="filter-row" data-filter="${esc(f.name)}" data-filter-type="query">
-    <label for="${fid}"${labelTitle}>${esc(f.label)}${f.required ? ' *' : ''}</label>
+    <label for="${fid}">${esc(f.label)}${f.required ? ' *' : ''}</label>
     ${input}
-    ${f.description ? `<div class="hint">${esc(f.description)}</div>` : ''}
   </div>`;
 }
 
@@ -463,9 +660,7 @@ function renderCodeSamplesCard(item) {
           <button type="button" class="code-tab" data-lang="python" role="tab">Python</button>
           <button type="button" class="code-tab" data-lang="rust" role="tab">Rust</button>
         </div>
-        <button class="icon-btn copy-code-btn" type="button" title="Copy code" aria-label="Copy code">
-          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
+        ${renderCopyIconButton('copy-code-btn', 'Copy code')}
       </div>
       <div class="code-editor-pane">
         <div class="code-editor-ln" aria-hidden="true">${gutter}</div>
@@ -479,9 +674,7 @@ function renderSampleCard() {
       <div class="section-card-head sample-card-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
         <span>Sample response</span>
         <div class="sample-toolbar">
-          <button class="icon-btn copy-sample-btn" type="button" title="Copy JSON" aria-label="Copy JSON" disabled>
-            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
+          ${renderCopyIconButton('copy-sample-btn', 'Copy JSON', ' disabled')}
           <button class="icon-btn download-sample-csv-btn" type="button" title="Download CSV" aria-label="Download CSV" disabled>
             <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
           </button>
@@ -505,7 +698,7 @@ function renderPanel(item, isFirst) {
   const dataJson = JSON.stringify(item).replace(/</g, '\\u003c');
   const filtersHtml = item.filters.length
     ? `<div class="section-card params-card">
-        <div class="section-card-head">Parameters</div>
+        <div class="section-card-head">Request</div>
         <div class="section-card-body"><div class="filter-grid">${item.filters.map((f) => renderFilter(f, item.id)).join('')}</div></div>
       </div>`
     : '';
@@ -522,10 +715,9 @@ function renderPanel(item, isFirst) {
           </table>`
     : `<p class="hint" style="margin:0;padding:16px">No schema columns parsed — use sample response.</p>`;
 
-  const schemaHtml = `<div class="section-card">
-        <div class="section-card-head">Response schema (rows[])</div>
-        <div class="section-card-body" style="padding:0;overflow-x:auto">${schemaBody}</div>
-      </div>`;
+  const schemaHtml = renderCollapsibleSection('Response schema', schemaBody, {
+    bodyStyle: 'padding:0;overflow-x:auto',
+  });
 
   return `<div id="panel-ep-${esc(item.id)}" class="panel${isFirst ? ' active' : ''}" data-endpoint='${dataJson}'>
     <div class="panel-eyebrow">${esc(item.tag)}</div>
@@ -538,15 +730,14 @@ function renderPanel(item, isFirst) {
           <div class="path-bar">
             <span class="m">${item.method}</span>
             <span class="p endpoint-url-text">${esc(item.path)}</span>
-            <button class="icon-btn copy-url-btn" type="button" title="Copy URL" aria-label="Copy URL">
-              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
+            ${renderCopyIconButton('copy-url-btn', 'Copy URL')}
           </div>
         </div>
       </div>
     </div>
     <div class="panel-row-split">
       <div class="panel-col-main">
+        ${renderParametersDocCard(item)}
         ${schemaHtml}
         ${filtersHtml}
         ${renderSampleCard()}
@@ -559,7 +750,7 @@ function renderPanel(item, isFirst) {
 }
 
 function renderNav(groups, firstId) {
-  let html = '<div class="nav-group-label">All APIs</div>';
+  let html = '';
   for (const group of groups) {
     html += `<details class="nav-tag" data-tag="${esc(group.id)}" data-search="${esc(group.label)}" open>
       <summary>
@@ -570,9 +761,7 @@ function renderNav(groups, firstId) {
       <div class="nav-tag-list">`;
     for (const api of group.apis) {
       const active = api.id === firstId ? ' active' : '';
-      html += `<button class="nav-api${active}" data-panel="ep-${esc(api.id)}" data-tag="${esc(group.id)}" data-search="${esc(api.title)} ${esc(api.path)}" type="button">
-        <span class="method">GET</span>${esc(api.title)}
-      </button>`;
+      html += `<button class="nav-api${active}" data-panel="ep-${esc(api.id)}" data-tag="${esc(group.id)}" data-search="${esc(api.title)} ${esc(api.path)}" type="button">${esc(api.title)}</button>`;
     }
     html += '</div></details>';
   }
@@ -595,6 +784,58 @@ function runtimeScript(dates) {
 
     const navItems = document.querySelectorAll(".nav-api");
     const panels = document.querySelectorAll(".panel");
+
+    function copyToClipboardFallback(text) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function copyToClipboard(text) {
+      if (!text) return Promise.resolve(false);
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text).then(function() { return true; }).catch(function() {
+          return copyToClipboardFallback(text);
+        });
+      }
+      return Promise.resolve(copyToClipboardFallback(text));
+    }
+
+    function showCopyFeedback(btn) {
+      if (!btn) return;
+      if (!btn.dataset.copyTitle) btn.dataset.copyTitle = btn.getAttribute("title") || "Copy";
+      btn.classList.add("copied");
+      btn.setAttribute("title", "Copied");
+      btn.setAttribute("aria-label", "Copied");
+      setTimeout(function() {
+        btn.classList.remove("copied");
+        var restore = btn.dataset.copyTitle || "Copy";
+        btn.setAttribute("title", restore);
+        btn.setAttribute("aria-label", restore);
+      }, 1500);
+    }
+
+    function bindCopyButton(btn, getText) {
+      if (!btn) return;
+      btn.addEventListener("click", function() {
+        var text = typeof getText === "function" ? getText() : getText;
+        copyToClipboard(text).then(function(ok) {
+          if (ok) showCopyFeedback(btn);
+        });
+      });
+    }
 
     function showPanel(id) {
       panels.forEach((p) => p.classList.toggle("active", p.id === "panel-" + id));
@@ -1026,22 +1267,14 @@ function runtimeScript(dates) {
         el.addEventListener("input", syncUrl);
         el.addEventListener("change", syncUrl);
       });
+      syncUrl();
       panel.querySelectorAll(".code-tab").forEach((tab) => {
         tab.addEventListener("click", () => showCodeTab(panel, tab.dataset.lang));
       });
-      panel.querySelector(".copy-code-btn")?.addEventListener("click", () => {
-        const active = panel.querySelector(".code-tab.active");
-        const lang = active ? active.dataset.lang : "shell";
-        const text = panel._codePlain || (panel._codeSamples && panel._codeSamples[lang]);
-        if (text) {
-          navigator.clipboard.writeText(text).then(() => {
-            const btn = panel.querySelector(".copy-code-btn");
-            if (btn) {
-              btn.classList.add("copied");
-              setTimeout(() => btn.classList.remove("copied"), 1500);
-            }
-          });
-        }
+      bindCopyButton(panel.querySelector(".copy-code-btn"), function() {
+        var active = panel.querySelector(".code-tab.active");
+        var lang = active ? active.dataset.lang : "shell";
+        return panel._codePlain || (panel._codeSamples && panel._codeSamples[lang]) || "";
       });
       panel.querySelector(".load-sample-btn")?.addEventListener("click", () => loadSample(panel));
       panel.querySelector(".sample-search")?.addEventListener("input", () => {
@@ -1053,15 +1286,11 @@ function runtimeScript(dates) {
           setSampleViewTab(panel, panel._sampleView);
         });
       });
-      copyBtn?.addEventListener("click", () => {
-        const url = copyBtn.dataset.url || buildUrl(panel);
-        navigator.clipboard.writeText(url).then(() => {
-          copyBtn.classList.add("copied");
-          setTimeout(() => copyBtn.classList.remove("copied"), 1500);
-        });
+      bindCopyButton(copyBtn, function() {
+        return copyBtn.dataset.url || buildUrl(panel);
       });
-      panel.querySelector(".copy-sample-btn")?.addEventListener("click", () => {
-        if (panel._sampleJson) navigator.clipboard.writeText(panel._sampleJson);
+      bindCopyButton(panel.querySelector(".copy-sample-btn"), function() {
+        return panel._sampleJson || "";
       });
       panel.querySelector(".download-sample-csv-btn")?.addEventListener("click", () => {
         downloadSampleCsv(panel);
@@ -1071,6 +1300,19 @@ function runtimeScript(dates) {
 }
 
 const SAMPLE_VIEW_STYLES = `
+    .panel-eyebrow { color: var(--text-muted); }
+    .sidebar { background: var(--bg); }
+    .nav-api.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: inset 2px 0 0 var(--text-muted);
+    }
+    .nav-api:hover { background: var(--surface); }
+    .sidebar-search input:focus,
+    .filter-row input:focus,
+    .filter-row select:focus {
+      box-shadow: none; border-color: var(--border-hover);
+    }
+    .path-bar .p { color: var(--text-secondary); }
     .panel-row-split {
       grid-template-columns: minmax(0, 1.65fr) minmax(0, 0.85fr);
     }
@@ -1105,8 +1347,8 @@ const SAMPLE_VIEW_STYLES = `
     }
     .sample-card.sample-fetching .sample-edge-progress { background: rgba(255,255,255,0.06); }
     .sample-edge-progress-fill {
-      height: 100%; width: 0; border-radius: 0 2px 2px 0;
-      background: linear-gradient(90deg, var(--violet), var(--purple-bright));
+      height: 100%; width: 0; border-radius: 0;
+      background: var(--purple-bright);
       transition: width 0.12s linear;
     }
     .sample-meta[hidden] { display: none !important; }
@@ -1118,31 +1360,94 @@ const SAMPLE_VIEW_STYLES = `
       color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
     }
     .sample-view-tab:hover { color: var(--text-secondary); }
-    .sample-view-tab.active { color: #e4e4e7; border-bottom-color: var(--purple-bright); }
+    .sample-view-tab.active { color: var(--text); border-bottom-color: var(--purple-bright); }
     .sample-body.sample-loaded { min-height: 160px; }
     .sample-pane { display: none; }
     .sample-pane.active { display: block; }
     .sample-table-wrap {
       overflow: auto; max-height: 420px; border: 1px solid var(--border);
-      border-radius: 8px; background: #0a0a0a;
+      border-radius: 0; background: var(--surface-inset);
     }
-    .sample-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .sample-table {
+      width: max-content; min-width: 100%; border-collapse: collapse; font-size: 0.78rem;
+      table-layout: auto;
+    }
     .sample-table th, .sample-table td {
-      text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border);
-      vertical-align: top;
+      text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border);
+      vertical-align: middle; white-space: nowrap;
     }
     .sample-table th {
       font-size: 0.72rem; font-weight: 600; letter-spacing: 0.01em;
       color: var(--text-secondary); position: sticky; top: 0; background: var(--surface-2); z-index: 1;
     }
-    .sample-table td { font-family: var(--mono); color: #d4d4d8; word-break: break-word; }
-    .sample-table tbody tr:hover td { background: rgba(168,85,247,0.06); }
+    .sample-table td { font-family: var(--mono); color: var(--text-secondary); }
+    .sample-table tbody tr:hover td { background: var(--surface-2); }
     .sample-table-empty { color: var(--text-muted); font-size: 0.8rem; margin: 0; padding: 14px; }
     .schema-table .schema-desc {
       color: var(--text-secondary); font-size: 0.78rem; line-height: 1.45;
       max-width: 360px; font-weight: 400; text-transform: none;
     }
     .schema-table th:nth-child(3) { min-width: 180px; text-transform: uppercase; }
+    .methods-empty {
+      margin: 0; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;
+    }
+    .methods-card .section-card-body { padding: 22px 20px 26px; }
+    .method-param-list { display: flex; flex-direction: column; gap: 0; }
+    .method-param {
+      padding: 0 0 22px; margin: 0 0 22px;
+      border: none; border-radius: 0; background: transparent;
+      border-bottom: 1px solid var(--border);
+    }
+    .method-param:last-child {
+      margin-bottom: 0; padding-bottom: 0; border-bottom: none;
+    }
+    .method-param-head {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 10px;
+    }
+    .method-param-name {
+      font-family: var(--mono); font-size: 0.88rem; color: var(--text); font-weight: 500;
+    }
+    .method-param-desc {
+      margin: 0 0 10px; font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary);
+      max-width: 52rem;
+    }
+    .method-param-usage {
+      margin: 0; font-size: 0.82rem; line-height: 1.6; color: var(--text-muted);
+    }
+    .method-param-usage code {
+      font-family: var(--mono); font-size: 0.78rem; color: var(--text-secondary);
+    }
+    .method-param-url-row {
+      margin-top: 14px; padding: 10px 12px;
+      background: var(--surface-inset); border: 1px solid var(--border);
+    }
+    .method-param-url {
+      display: block; font-family: var(--mono); font-size: 0.76rem;
+      line-height: 1.55; color: var(--text-secondary); word-break: break-all;
+    }
+    .req-pill {
+      font-size: 0.72rem; font-weight: 500; letter-spacing: 0;
+      text-transform: none; padding: 0; border: none; background: none; white-space: nowrap;
+    }
+    .req-pill.required { color: var(--text-secondary); }
+    .req-pill.optional { color: var(--green); }
+    .method-param-head .type-pill {
+      font-family: var(--mono); font-size: 0.72rem;
+      color: var(--purple-bright); background: var(--purple-soft);
+      padding: 2px 8px; border-radius: 0;
+    }
+    .section-collapse { overflow: hidden; }
+    .section-collapse-summary {
+      list-style: none; cursor: pointer; user-select: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-collapse-summary::-webkit-details-marker { display: none; }
+    .section-collapse-summary:hover { color: var(--text-secondary); }
+    .section-collapse-chevron {
+      width: 12px; height: 12px; flex-shrink: 0; color: var(--text-muted);
+      transition: transform 0.15s;
+    }
+    .section-collapse[open] .section-collapse-chevron { transform: rotate(90deg); color: var(--purple-bright); }
 `;
 
 function buildHeliumApisCatalogHtml(options = {}) {
@@ -1175,7 +1480,10 @@ function buildHeliumApisCatalogHtml(options = {}) {
     <div class="layout">
       <aside class="sidebar">
         <div class="sidebar-search">
-          <input id="nav-search" type="search" placeholder="Search APIs…" autocomplete="off">
+          <label class="sidebar-search-inner" for="nav-search">
+            <svg class="sidebar-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="nav-search" type="search" placeholder="Search.." autocomplete="off">
+          </label>
         </div>
         <div class="sidebar-scroll">
           ${navHtml}
