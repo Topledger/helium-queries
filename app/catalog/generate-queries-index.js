@@ -782,6 +782,27 @@ function runtimeScript(dates) {
     const DEFAULT_TO = ${JSON.stringify(dates.end)};
     const STORED_MAKERS = [];
 
+    (function initSidebarToggle() {
+      var shell = document.querySelector(".shell");
+      var toggle = document.getElementById("sidebar-toggle");
+      var storageKey = "helium-apis-sidebar-collapsed";
+      function setCollapsed(collapsed) {
+        if (!shell) return;
+        shell.classList.toggle("sidebar-collapsed", collapsed);
+        if (toggle) {
+          toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+          toggle.setAttribute("aria-label", collapsed ? "Show API sidebar" : "Hide API sidebar");
+        }
+        try { localStorage.setItem(storageKey, collapsed ? "1" : "0"); } catch (e) {}
+      }
+      try {
+        if (localStorage.getItem(storageKey) === "1") setCollapsed(true);
+      } catch (e) {}
+      toggle?.addEventListener("click", function() {
+        setCollapsed(!shell.classList.contains("sidebar-collapsed"));
+      });
+    })();
+
     const navItems = document.querySelectorAll(".nav-api");
     const panels = document.querySelectorAll(".panel");
 
@@ -1466,24 +1487,33 @@ function buildHeliumApisCatalogHtml(options = {}) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Helium APIs · Top Ledger Research</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>${styles}</style>
 </head>
 <body>
   <div class="shell">
     <header class="header">
-      <a class="logo" href="https://research.topledger.xyz/" target="_blank" rel="noopener">
-        <img src="https://topledger.xyz/assets/images/logo/topledger-full.svg?imwidth=384" alt="Top Ledger Research" width="160" height="26" />
-      </a>
-      <div class="header-meta"><span id="header-api-base"></span> · ${endpoints.length} endpoints</div>
+      <div class="header-brand">
+        <a class="logo" href="https://research.topledger.xyz/" target="_blank" rel="noopener">
+          <img src="https://topledger.xyz/assets/images/logo/topledger-full.svg?imwidth=384" alt="Top Ledger Research" width="160" height="26" />
+        </a>
+      </div>
+      <div class="header-main">
+        <div class="header-meta"><span id="header-api-base"></span> · ${endpoints.length} endpoints</div>
+      </div>
     </header>
     <div class="layout">
-      <aside class="sidebar">
+      <aside class="sidebar" id="api-sidebar">
         <div class="sidebar-search">
-          <label class="sidebar-search-inner" for="nav-search">
-            <svg class="sidebar-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input id="nav-search" type="search" placeholder="Search.." autocomplete="off">
-          </label>
+          <div class="sidebar-search-row">
+            <label class="sidebar-search-inner" for="nav-search">
+              <svg class="sidebar-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="nav-search" type="search" placeholder="Search.." autocomplete="off">
+            </label>
+            <button type="button" class="icon-btn sidebar-toggle" id="sidebar-toggle" aria-expanded="true" aria-controls="api-sidebar" aria-label="Toggle API sidebar" title="Toggle sidebar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+          </div>
         </div>
         <div class="sidebar-scroll">
           ${navHtml}
