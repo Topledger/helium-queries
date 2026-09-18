@@ -47,3 +47,11 @@ Next.js serves `/helium-apis` and `/api/helium/*` using files under `queries/app
 
 - **Standalone:** `npm run webhook` (pulls this repo on push).
 - **State of Solana server:** use `helium-queries-webhook-listener.js` at the monorepo root (rsync into `queries/`).
+
+### Vercel deploy gate (`deploy.yml`)
+
+```yaml
+deploy on vercel: false
+```
+
+Server always syncs SQL/app into `state_of_solana/queries/`. Set to `true` to also push **state_of_solana** to GitHub and trigger Vercel.
