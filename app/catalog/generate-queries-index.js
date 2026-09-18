@@ -3,11 +3,28 @@
 const fs = require('fs');
 const path = require('path');
 
-/** Repo root: SQL groups live here; app/ and pipeline/ are siblings. */
-const REPO_ROOT = path.resolve(__dirname, '../..');
+/** SQL groups at repo root; app/ and pipeline/ are siblings (helium-queries layout). */
+function resolveQueriesRoot() {
+  const envRoot = process.env.HELIUM_QUERIES_ROOT?.trim();
+  if (envRoot) {
+    const resolved = path.resolve(envRoot);
+    if (fs.existsSync(resolved)) return resolved;
+  }
+  const monorepoQueries = path.join(process.cwd(), 'queries');
+  if (fs.existsSync(path.join(monorepoQueries, 'app', 'catalog', 'generate-queries-index.js'))) {
+    return monorepoQueries;
+  }
+  const fromFile = path.resolve(__dirname, '../..');
+  if (fs.existsSync(path.join(fromFile, 'app', 'catalog', 'generate-queries-index.js'))) {
+    return fromFile;
+  }
+  return fromFile;
+}
+
+const REPO_ROOT = resolveQueriesRoot();
 const QUERIES = REPO_ROOT;
 const OUT = path.join(REPO_ROOT, 'index.html');
-const STYLE_SRC = path.join(__dirname, 'catalog-theme.html');
+const STYLE_SRC = path.join(REPO_ROOT, 'app', 'catalog', 'catalog-theme.html');
 
 const SKIP_QUERY_DIRS = new Set(['app', 'pipeline', 'scripts', 'node_modules', '.git']);
 
