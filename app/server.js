@@ -106,7 +106,6 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       sendJson(res, 500, {
         success: false,
-        query: `${group}/${name}`,
         error: err.message || 'Query execution failed',
       });
     }

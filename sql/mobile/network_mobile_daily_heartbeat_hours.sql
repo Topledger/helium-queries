@@ -1,16 +1,9 @@
--- query_name: NETWORK_MOBILE_HEARTBEAT_HOURS
+-- query_name: NETWORK_MOBILE_DAILY_HEARTBEAT_HOURS
 -- UI: Network mobile daily heartbeat hours → GET /v1/helium/l2/network/mobile/heartbeat-hours
 WITH hourly AS (
     SELECT
         h.pubkey,
-        CASE
-            WHEN '{bucket}' = 'total'
-                THEN '{start_date}'
-            ELSE date_format(
-                    date_trunc('{bucket}', CAST(h.partition_0 AS date)),
-                    '%Y-%m-%dT%H:%i:%sZ'
-                 )
-        END                                                                 AS bucket_start,
+        h.partition_0,
         date_trunc('hour', from_unixtime(
             CASE
                 WHEN try_cast(h.timestamp AS bigint) > 100000000000
@@ -27,13 +20,13 @@ WITH hourly AS (
 per_gateway AS (
     SELECT
         pubkey,
-        bucket_start,
+        partition_0,
         count(*)                                                            AS valid_hours
     FROM hourly
     GROUP BY 1, 2
 )
 SELECT
-    bucket_start                                                            AS "bucketStart",
+    cast(partition_0 AS date)                                               AS "date",
     count(*)                                                                AS "gatewaysWithHeartbeat",
     count(CASE WHEN valid_hours >= 4 THEN 1 END)                            AS "gatewaysWith4h",
     count(CASE WHEN valid_hours >= 12 THEN 1 END)                           AS "gatewaysWith12h",
@@ -41,4 +34,4 @@ SELECT
     avg(valid_hours)                                                        AS "avgValidHours"
 FROM per_gateway
 GROUP BY 1
-ORDER BY 1
+ORDER BY 1 DESC

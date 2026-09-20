@@ -15,22 +15,12 @@ cte_escrow_account AS (
 )
 SELECT
     b.oui_id AS "oui",
-    sum(
-        CASE
-            WHEN block_date >= current_date - interval '1' day
-            THEN args.burndelegateddatacreditsv0args.amount
-            ELSE 0
-        END
-    ) AS "lastDayDcUsage",
-    sum(
-        CASE
-            WHEN block_date >= current_date - interval '7' day
-            THEN args.burndelegateddatacreditsv0args.amount
-            ELSE 0
-        END
-    ) AS "last7DaysDcUsage"
+    coalesce(
+        sum(args.burndelegateddatacreditsv0args.amount),
+        0
+    ) AS "dcUsage"
 FROM cte_escrow_account b
 LEFT JOIN helium.data_credits a
        ON a.input_accounts.escrowAccount = b.escrow_account
-WHERE block_date >= current_date - interval '7' day
+      AND a.block_date BETWEEN date('{start_date}') AND date('{end_date}')
 GROUP BY 1

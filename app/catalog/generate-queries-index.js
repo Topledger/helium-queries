@@ -27,8 +27,19 @@ const REPO_ROOT = resolveQueriesRoot();
 const QUERIES = path.join(REPO_ROOT, SQL_DIR);
 const OUT = path.join(REPO_ROOT, 'index.html');
 const STYLE_SRC = path.join(REPO_ROOT, 'app', 'catalog', 'catalog-theme.html');
+const DATA_DIR = path.join(REPO_ROOT, 'data');
 
-const SKIP_QUERY_DIRS = new Set([]);
+const SKIP_QUERY_DIRS = new Set([
+  'gateway',
+  'meta',
+  'network',
+  'relay',
+]);
+
+const SKIP_CATALOG_QUERIES = new Set([
+  'iot/iot_datarates',
+  'iot/iot_regions',
+]);
 
 require('dotenv').config({ path: path.join(REPO_ROOT, '.env') });
 
@@ -38,16 +49,82 @@ function resolveBaseUrl(override) {
 }
 
 const GROUP_ORDER = [
-  'delegation',
-  'gateway',
   'hotspot',
   'iot',
-  'meta',
   'mobile',
-  'network',
   'oui',
-  'relay',
+  'delegation',
 ];
+
+const ENDPOINT_ORDER = {
+  hotspot: [
+    'hotspot_get',
+    'hotspots_list',
+    'hotspot_metrics',
+    'hotspot_by_maker',
+    'hotspot_lookup_by_key_to_asset',
+    'hotspot_makers',
+  ],
+  iot: [
+    'iot_hotspot_reward_daily',
+    'iot_hotspot_reward_total',
+    'iot_network_reward_daily',
+    'iot_network_reward_total',
+    'iot_packets_daily',
+    'iot_top_hotspots_by_packet_count',
+    'iot_top_hotspots_by_payload_size',
+    'iot_gateway_data',
+    'iot_gateway_data_sum',
+    'iot_regions',
+    'iot_datarates',
+  ],
+  mobile: [
+    'gateway_mobile_daily_reward',
+    'gateway_mobile_daily_data',
+    'gateway_mobile_daily_heartbeat_hours',
+    'gateway_mobile_daily_speedtest_averages',
+    'network_mobile_daily_reward',
+    'network_mobile_daily_data',
+    'network_mobile_daily_heartbeat_hours',
+    'network_mobile_daily_speedtest_averages',
+    'network_mobile_top_gateways_by_sessions',
+    'network_mobile_top_gateways_by_data',
+  ],
+  oui: [
+    'oui_data',
+    'oui_dc_usage',
+    'oui_packet_size_distribution',
+    'oui_top_gateways_by_payload',
+    'oui_list',
+  ],
+  delegation: [
+    'active_stake',
+    'active_stake_by_dao',
+    'wallet_positions',
+    'delegated_positions',
+    'wallet_proxies',
+    'open_positions',
+  ],
+};
+
+const DEFAULT_HOTSPOT = '112Nmd14Dg9F488SZv7aonHBnsHkQEFiWuvAEtr916qRFfPy3V4c';
+const DEFAULT_OUI = '1';
+
+function readStoredOptions(name) {
+  try {
+    const values = JSON.parse(fs.readFileSync(path.join(DATA_DIR, `${name}.json`), 'utf8'));
+    return Array.isArray(values) ? values.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+const STORED_OPTIONS = {
+  makers: readStoredOptions('makers'),
+  regions: readStoredOptions('regions'),
+  datarates: readStoredOptions('datarates'),
+  ouis: readStoredOptions('ouis'),
+};
 
 const FRAGMENT_TO_PARAMS = {
   lookup_filter: ['address', 'entity_key', 'asset_id', 'key_to_asset_key'],
@@ -122,6 +199,37 @@ const PARAM_META = {
 
 /** Reference docs for Methods card (not shown under parameter inputs). */
 const PARAM_METHOD_DOCS = {
+  month: {
+    type: 'month (YYYY-MM)',
+    default: 'current month',
+    desc: 'Calendar month to query. Use either month or from/to, not both.',
+  },
+  from: {
+    type: 'date (YYYY-MM-DD)',
+    default: 'first day of current month',
+    desc: 'Inclusive start date. Must be paired with to; ranges are limited to 30 days.',
+  },
+  to: {
+    type: 'date (YYYY-MM-DD)',
+    default: 'yesterday',
+    desc: 'Inclusive end date. Must be paired with from and cannot be in the future.',
+  },
+  hotspot_key: {
+    type: 'string',
+    default: '—',
+    desc: 'Gateway hotspot key. Base58 and long base64 oracle keys are accepted.',
+  },
+  include_operational: {
+    type: 'false | true',
+    default: 'false',
+    desc: 'Include operational-fund rewards in the network reward total.',
+  },
+  region: { type: 'string', default: 'empty (all)', desc: 'LoRa RF region.' },
+  datarate: { type: 'string', default: 'empty (all)', desc: 'LoRa datarate such as SF7BW125.' },
+  type: { type: 'join | uplink', default: 'empty (all)', desc: 'IoT packet type.' },
+  billing: { type: 'paid | free', default: 'empty (all)', desc: 'Filter DC-billed or free traffic.' },
+  position_authority: { type: 'string', default: 'empty', desc: 'Position authority wallet.' },
+  subdao: { type: 'string', default: 'empty', desc: 'Mobile, IoT, or a sub-DAO account.' },
   start_date: {
     type: 'date (YYYY-MM-DD)',
     default: '7 days before today',
@@ -362,20 +470,49 @@ function parseOutputColumns(sql) {
 function titleCase(name) {
   return name
     .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((w) => {
+      if (['dao', 'hnt', 'iot', 'oui'].includes(w.toLowerCase())) return w.toUpperCase();
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    })
     .join(' ');
 }
 
 function groupLabel(g) {
+  if (g === 'hotspot') return 'Gateway';
+  if (g === 'delegation') return 'Delegations';
+  if (g === 'iot') return 'IoT';
+  if (g === 'oui') return 'OUI';
   return g.charAt(0).toUpperCase() + g.slice(1);
 }
 
+function sortQueryFiles(group, files) {
+  const order = ENDPOINT_ORDER[group] || [];
+  const rank = new Map(order.map((name, index) => [name, index]));
+  return files.sort((a, b) => {
+    const aName = a.replace(/\.sql$/, '');
+    const bName = b.replace(/\.sql$/, '');
+    const aRank = rank.has(aName) ? rank.get(aName) : 1000;
+    const bRank = rank.has(bName) ? rank.get(bName) : 1000;
+    return aRank - bRank || aName.localeCompare(bName);
+  });
+}
+
 function defaultDates() {
-  const end = new Date();
-  const start = new Date(end);
-  start.setDate(start.getDate() - 7);
-  const iso = (d) => d.toISOString().slice(0, 10);
-  return { start: iso(start), end: iso(end) };
+  const today = new Date();
+  const end = new Date(today);
+  end.setDate(end.getDate() - 1);
+  const start = new Date(today.getFullYear(), today.getMonth(), 1);
+  if (end < start) end.setTime(start.getTime());
+  const iso = (d) => [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-');
+  return {
+    start: iso(start),
+    end: iso(end),
+    currentMonth: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`,
+  };
 }
 
 function paramRequired(group, name, param) {
@@ -431,6 +568,180 @@ function paramToFilter(p, group, name, dates) {
   };
 }
 
+function filter(name, label, type = 'text', extra = {}) {
+  return {
+    name,
+    label,
+    type,
+    required: false,
+    description: PARAM_METHOD_DOCS[name]?.desc || '',
+    default: '',
+    options: null,
+    ...extra,
+  };
+}
+
+function dateFilters(dates) {
+  return [
+    filter('from', 'From', 'date', {
+      default: dates.start,
+    }),
+    filter('to', 'To', 'date', {
+      default: dates.end,
+    }),
+  ];
+}
+
+function endpointFilters(group, name, dates, inferred) {
+  const datesOnly = () => dateFilters(dates);
+  const gatewayDates = () => [
+    filter('address', 'Gateway', 'text', {
+      required: true,
+      default: DEFAULT_HOTSPOT,
+      description: 'Gateway key, entity key, base64 entity key, asset id, or key-to-asset key.',
+    }),
+    ...dateFilters(dates),
+  ];
+  const hotspotDates = () => [
+    filter('hotspot_key', 'Hotspot key', 'text', {
+      required: true,
+      default: DEFAULT_HOTSPOT,
+    }),
+    ...dateFilters(dates),
+  ];
+  const topLimit = () => filter('limit', 'Top N', 'select', {
+    default: '10',
+    options: ['10', '50', '100'],
+  });
+  const ouiDates = () => [
+    filter('oui_id', 'OUI id', 'select', {
+      required: true,
+      default: DEFAULT_OUI,
+      options: STORED_OPTIONS.ouis.length ? STORED_OPTIONS.ouis : [DEFAULT_OUI],
+    }),
+    ...dateFilters(dates),
+  ];
+
+  if (group === 'delegation') {
+    const text = (key, label = titleCase(key)) => filter(key, label);
+    const network = filter('network', 'Network', 'select', {
+      options: ['mobile', 'iot', 'undelegated'],
+      includeEmpty: true,
+      emptyLabel: 'All networks',
+    });
+    const byName = {
+      active_stake: [],
+      active_stake_by_dao: [network],
+      delegated_positions: [text('wallet'), text('nft_mint', 'Stake NFT'), network],
+      open_positions: [
+        text('position_authority', 'Position authority'),
+        text('nft_mint', 'NFT mint'),
+        text('subdao', 'SubDAO'),
+      ],
+      wallet_positions: [text('wallet'), text('nft_mint', 'Stake NFT'), network],
+      wallet_proxies: [
+        filter('wallet', 'Wallet', 'text', { required: true }),
+        filter('role', 'Role', 'select', { default: 'owner', options: ['owner', 'proxy'] }),
+        text('nft_mint', 'Stake NFT'),
+      ],
+    };
+    if (Object.prototype.hasOwnProperty.call(byName, name)) return byName[name];
+  }
+
+  if (group === 'hotspot') {
+    const byName = {
+      hotspot_by_maker: [
+        filter('maker', 'Maker', 'select', {
+          options: STORED_OPTIONS.makers,
+          includeEmpty: true,
+          emptyLabel: STORED_OPTIONS.makers.length
+            ? `All makers (${STORED_OPTIONS.makers.length})`
+            : 'All makers',
+        }),
+      ],
+      hotspot_get: [
+        filter('address', 'Gateway', 'text', { required: true, default: DEFAULT_HOTSPOT }),
+      ],
+      hotspot_lookup_by_key_to_asset: [
+        filter('key_to_asset_key', 'Key to asset', 'text', { required: true }),
+      ],
+      hotspot_makers: [],
+      hotspot_metrics: [],
+      hotspots_list: [
+        filter('offset', 'Offset', 'number', { default: '0' }),
+        filter('limit', 'Per page', 'number', { default: '100' }),
+      ],
+    };
+    if (Object.prototype.hasOwnProperty.call(byName, name)) return byName[name];
+  }
+
+  if (group === 'iot') {
+    if (name === 'iot_datarates' || name === 'iot_regions') return [];
+    if (name === 'iot_gateway_data' || name === 'iot_gateway_data_sum') return gatewayDates();
+    if (name === 'iot_hotspot_reward_daily' || name === 'iot_hotspot_reward_total') {
+      return hotspotDates();
+    }
+    if (name === 'iot_network_reward_daily') return datesOnly();
+    if (name === 'iot_network_reward_total') {
+      return [
+        ...datesOnly(),
+        filter('include_operational', 'Include operational', 'select', {
+          default: 'false',
+          options: ['false', 'true'],
+        }),
+      ];
+    }
+    if (name === 'iot_packets_daily') {
+      return [
+        ...datesOnly(),
+        filter('region', 'Region', 'select', {
+          options: STORED_OPTIONS.regions,
+          includeEmpty: true,
+          emptyLabel: 'All regions',
+        }),
+        filter('datarate', 'Datarate', 'select', {
+          options: STORED_OPTIONS.datarates,
+          includeEmpty: true,
+          emptyLabel: 'All datarates',
+        }),
+        filter('type', 'Packet type', 'select', {
+          options: ['join', 'uplink'],
+          includeEmpty: true,
+          emptyLabel: 'All packet types',
+        }),
+        filter('billing', 'Traffic', 'select', {
+          options: ['paid', 'free'],
+          includeEmpty: true,
+          emptyLabel: 'All traffic',
+        }),
+      ];
+    }
+    if (name === 'iot_top_hotspots_by_packet_count' || name === 'iot_top_hotspots_by_payload_size') {
+      return [...datesOnly(), topLimit()];
+    }
+  }
+
+  if (group === 'mobile') {
+    const base = name.startsWith('gateway_') ? gatewayDates() : datesOnly();
+    if (name === 'network_mobile_top_gateways_by_data' ||
+        name === 'network_mobile_top_gateways_by_sessions') {
+      return [...base, topLimit()];
+    }
+    return base;
+  }
+
+  if (group === 'oui') {
+    if (name === 'oui_list') return [];
+    const base = ouiDates();
+    if (name === 'oui_top_gateways_by_payload') {
+      return [...base, filter('limit', 'Limit', 'number', { default: '10' })];
+    }
+    return base;
+  }
+
+  return inferred;
+}
+
 function isQueryGroupDir(name) {
   return (
     name &&
@@ -454,10 +765,23 @@ function collectEndpoints(baseUrl) {
   const groups = fs
     .readdirSync(QUERIES, { withFileTypes: true })
     .filter((d) => d.isDirectory() && isQueryGroupDir(d.name));
+  const groupRank = new Map(GROUP_ORDER.map((name, index) => [name, index]));
 
-  for (const g of groups.sort((a, b) => a.name.localeCompare(b.name))) {
+  for (const g of groups.sort((a, b) => {
+    const aRank = groupRank.has(a.name) ? groupRank.get(a.name) : 1000;
+    const bRank = groupRank.has(b.name) ? groupRank.get(b.name) : 1000;
+    return aRank - bRank || a.name.localeCompare(b.name);
+  })) {
     const dir = path.join(QUERIES, g.name);
-    for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()) {
+    const files = sortQueryFiles(
+      g.name,
+      fs.readdirSync(dir).filter((file) => {
+        if (!file.endsWith('.sql')) return false;
+        const name = file.replace(/\.sql$/, '');
+        return !SKIP_CATALOG_QUERIES.has(`${g.name}/${name}`);
+      }),
+    );
+    for (const file of files) {
       const name = file.replace(/\.sql$/, '');
       const sql = fs.readFileSync(path.join(dir, file), 'utf8');
       const { queryName, description } = parseHeader(sql);
@@ -475,9 +799,14 @@ function collectEndpoints(baseUrl) {
         url: BASE + apiPath,
         category: g.name,
         tag: groupLabel(g.name),
-        filters: params
-          .filter((p) => p !== 'now_ts')
-          .map((p) => paramToFilter(p, g.name, name, dates)),
+        filters: endpointFilters(
+          g.name,
+          name,
+          dates,
+          params
+            .filter((p) => p !== 'now_ts')
+            .map((p) => paramToFilter(p, g.name, name, dates)),
+        ),
         response_schema: parseOutputColumns(sql),
       });
     }
@@ -511,7 +840,11 @@ function paramMethodType(f) {
   const doc = PARAM_METHOD_DOCS[f.name];
   if (doc?.type) return doc.type;
   if (f.type === 'date') return 'date (YYYY-MM-DD)';
-  if (f.type === 'select' && f.options?.length) return f.options.join(' | ');
+  if (f.type === 'month-select') return 'month (YYYY-MM)';
+  if (f.type === 'number') return 'integer';
+  if (f.type === 'select' && f.options?.length) {
+    return f.options.map((o) => typeof o === 'object' ? o.value : o).join(' | ');
+  }
   if (f.name === 'offset' || f.name === 'limit' || f.name === 'now_ts') return 'integer';
   return 'string';
 }
@@ -523,52 +856,12 @@ function paramMethodDefault(f) {
 }
 
 function paramMethodDesc(f) {
+  if (f.description) return f.description;
   const doc = PARAM_METHOD_DOCS[f.name];
   return doc?.desc || '—';
 }
 
-function buildSingleParamUrl(path, name, value) {
-  const base = path + '?' + encodeURIComponent(name) + '=';
-  if (value === undefined || value === null || String(value) === '') return base;
-  return base + encodeURIComponent(String(value));
-}
-
-/** Static examples for per-parameter GET lines (do not sync with Request form). */
-const PARAM_EXAMPLE_VALUES = {
-  start_date: '2026-09-01',
-  end_date: '2026-09-18',
-  min_date: '2024-01-01',
-  bucket: 'day',
-  offset: '0',
-  limit: '25',
-  address: '112abcXYZexampleHotspotGatewayPubkey111111111',
-  entity_key: '0123456789abcdef',
-  asset_id: 'asset_example_id',
-  key_to_asset_key: 'keyToAssetExample111111111111111111111',
-  wallet: '7EqQdE8HwpvNh7Z1Q8K9m2pL3vR4sT5uV6wX7yZ8aB9cD0eF',
-  oui_id: '001122',
-  cbsd_id: '48A0B90123456789',
-  nft_mint: 'StakeNftMintExample11111111111111111111111',
-  sub_dao: '39Lw1RH6zt8AJvKn3BTxmUDofzduCM2J3kSaGDZ8L7Sk',
-  network: 'IoT',
-  authority: 'AuthExample1111111111111111111111111111111',
-  maker: 'MakerExample11111111111111111111111111111111',
-  role: 'owner',
-  status: 'delegated',
-  packet_type: 'uplink',
-  free: 'false',
-  now_ts: '1726531200',
-};
-
-function paramExampleForUrl(f) {
-  if (f.default !== undefined && String(f.default) !== '') return String(f.default);
-  if (PARAM_EXAMPLE_VALUES[f.name]) return PARAM_EXAMPLE_VALUES[f.name];
-  if (f.type === 'date') return '2026-09-01';
-  if (f.type === 'select' && f.options?.length) return String(f.options[0]);
-  return 'example';
-}
-
-function renderMethodParam(f, item) {
+function renderMethodParam(f) {
   const reqLabel = f.required ? 'Required' : 'Optional';
   const reqClass = f.required ? 'required' : 'optional';
   const def = paramMethodDefault(f);
@@ -581,8 +874,6 @@ function renderMethodParam(f, item) {
   } else {
     usage = 'Optional — omit unless you need to filter by this field.';
   }
-  const paramUrl = buildSingleParamUrl(item.path, f.name, paramExampleForUrl(f));
-
   return `<article class="method-param">
     <div class="method-param-head">
       <code class="method-param-name">${esc(f.name)}</code>
@@ -591,9 +882,6 @@ function renderMethodParam(f, item) {
     </div>
     <p class="method-param-desc">${esc(paramMethodDesc(f))}</p>
     <p class="method-param-usage">${usage}</p>
-    <div class="method-param-url-row">
-      <code class="method-param-url" data-param="${esc(f.name)}">${esc(paramUrl)}</code>
-    </div>
   </article>`;
 }
 
@@ -620,8 +908,9 @@ function renderCollapsibleSection(title, innerBody, options = {}) {
 }
 
 function renderParametersDocCard(item) {
-  if (!item.filters.length) return '';
-  const paramBlocks = item.filters.map((f) => renderMethodParam(f, item)).join('');
+  const documentedFilters = item.filters.filter((f) => f.name !== '_date_mode');
+  if (!documentedFilters.length) return '';
+  const paramBlocks = documentedFilters.map((f) => renderMethodParam(f)).join('');
   return renderCollapsibleSection(
     'Parameters',
     `<div class="method-param-list">${paramBlocks}</div>`
@@ -631,17 +920,41 @@ function renderParametersDocCard(item) {
 function renderFilter(f, itemId) {
   const fid = `f-${itemId}-${f.name}`;
   let input = '';
+  const isInactiveDateMode = f.date_mode && f.date_mode !== 'month';
+  const disabled = isInactiveDateMode ? ' disabled' : '';
   if (f.type === 'select') {
+    const empty = f.includeEmpty
+      ? `<option value="">${esc(f.emptyLabel || 'All')}</option>`
+      : '';
+    const opts = (f.options || [])
+      .map((option) => {
+        const value = typeof option === 'object' ? option.value : option;
+        const label = typeof option === 'object' ? option.label : option;
+        return `<option value="${esc(value)}"${String(f.default) === String(value) ? ' selected' : ''}>${esc(label)}</option>`;
+      })
+      .join('');
+    input = `<select id="${fid}" data-name="${esc(f.name)}"${disabled}>${empty}${opts}</select>`;
+  } else if (f.type === 'date-mode') {
+    const opts = (f.options || [])
+      .map((option) => `<option value="${esc(option.value)}"${f.default === option.value ? ' selected' : ''}>${esc(option.label)}</option>`)
+      .join('');
+    input = `<select id="${fid}" class="date-mode-select">${opts}</select>`;
+  } else if (f.type === 'month-select') {
     const opts = (f.options || [])
       .map((o) => `<option value="${esc(o)}"${f.default === o ? ' selected' : ''}>${esc(o)}</option>`)
       .join('');
-    input = `<select id="${fid}" data-name="${esc(f.name)}">${opts}</select>`;
+    input = `<select id="${fid}" data-name="${esc(f.name)}"${disabled}>${opts}</select>`;
   } else if (f.type === 'date') {
-    input = `<input id="${fid}" type="date" data-name="${esc(f.name)}" value="${esc(f.default || '')}">`;
+    input = `<input id="${fid}" type="date" data-name="${esc(f.name)}" value="${esc(f.default || '')}"${disabled}>`;
+  } else if (f.type === 'number') {
+    input = `<input id="${fid}" type="number" data-name="${esc(f.name)}" value="${esc(f.default || '')}"${disabled}>`;
   } else {
-    input = `<input id="${fid}" type="text" data-name="${esc(f.name)}" value="${esc(f.default || '')}" placeholder="${esc(f.name)}">`;
+    input = `<input id="${fid}" type="text" data-name="${esc(f.name)}" value="${esc(f.default || '')}" placeholder="${esc(f.name)}"${disabled}>`;
   }
-  return `<div class="filter-row" data-filter="${esc(f.name)}" data-filter-type="query">
+  const dateModeAttrs = f.date_mode
+    ? ` data-date-mode="${esc(f.date_mode)}"${isInactiveDateMode ? ' hidden' : ''}`
+    : '';
+  return `<div class="filter-row" data-filter="${esc(f.name)}" data-filter-type="${esc(f.type)}"${dateModeAttrs}>
     <label for="${fid}">${esc(f.label)}${f.required ? ' *' : ''}</label>
     ${input}
   </div>`;
@@ -891,6 +1204,7 @@ function runtimeScript(dates) {
       let path = data.path;
       const params = new URLSearchParams();
       panel.querySelectorAll("[data-name]").forEach((input) => {
+        if (input.disabled) return;
         const name = input.dataset.name;
         const val = (input.value || "").trim();
         if (val) params.set(name, val);
@@ -1276,6 +1590,18 @@ function runtimeScript(dates) {
     document.querySelectorAll(".panel[data-endpoint]").forEach((panel) => {
       const copyBtn = panel.querySelector(".copy-url-btn");
       const urlEl = panel.querySelector(".endpoint-url-text");
+      const dateModeSelect = panel.querySelector(".date-mode-select");
+      function syncDateMode() {
+        if (!dateModeSelect) return;
+        const mode = dateModeSelect.value;
+        panel.querySelectorAll("[data-date-mode]").forEach((row) => {
+          const active = row.dataset.dateMode === mode;
+          row.hidden = !active;
+          row.querySelectorAll("[data-name]").forEach((input) => {
+            input.disabled = !active;
+          });
+        });
+      }
       function syncUrl() {
         const url = buildUrl(panel);
         const data = JSON.parse(panel.dataset.endpoint);
@@ -1288,6 +1614,11 @@ function runtimeScript(dates) {
         el.addEventListener("input", syncUrl);
         el.addEventListener("change", syncUrl);
       });
+      dateModeSelect?.addEventListener("change", () => {
+        syncDateMode();
+        syncUrl();
+      });
+      syncDateMode();
       syncUrl();
       panel.querySelectorAll(".code-tab").forEach((tab) => {
         tab.addEventListener("click", () => showCodeTab(panel, tab.dataset.lang));
@@ -1533,16 +1864,17 @@ ${runtimeScript(dates)}
 }
 
 function writeCatalogFiles(html) {
-  fs.writeFileSync(OUT, html);
+  const formatted = html.replace(/[ \t]+$/gm, '');
+  fs.writeFileSync(OUT, formatted);
   const monorepo = process.env.HELIUM_MONOREPO_ROOT;
   if (monorepo) {
     const root = path.resolve(monorepo);
     const outPublic = path.join(root, 'public', 'queries', 'index.html');
     const outHelium = path.join(root, 'public', 'helium-apis', 'index.html');
     fs.mkdirSync(path.dirname(outPublic), { recursive: true });
-    fs.writeFileSync(outPublic, html);
+    fs.writeFileSync(outPublic, formatted);
     fs.mkdirSync(path.dirname(outHelium), { recursive: true });
-    fs.writeFileSync(outHelium, html);
+    fs.writeFileSync(outHelium, formatted);
   }
 }
 
@@ -1555,7 +1887,7 @@ function main() {
     process.exit(1);
   }
   writeCatalogFiles(html);
-  const count = (html.match(/class="panel"/g) || []).length;
+  const count = (html.match(/class="panel(?: active)?"/g) || []).length;
   console.log('Wrote', OUT, 'with', count, 'API panels');
   if (process.env.HELIUM_MONOREPO_ROOT) {
     console.log('Also wrote public/queries and public/helium-apis under', process.env.HELIUM_MONOREPO_ROOT);

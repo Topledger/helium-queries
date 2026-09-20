@@ -6,25 +6,7 @@ WITH cte_oui AS (
 )
 SELECT
     '{oui_id}'                                                              AS "oui",
-    CASE
-        WHEN '{bucket}' = 'total'
-            THEN '{start_date}'
-        WHEN '{bucket}' IN ('day', 'week')
-            THEN date_format(
-                    date_trunc('{bucket}', CAST(p.partition_0 AS date)),
-                    '%Y-%m-%dT%H:%i:%sZ'
-                 )
-        ELSE date_format(
-                date_trunc('{bucket}', from_unixtime(
-                    CASE
-                        WHEN try_cast(p.receivedtimestamp AS bigint) > 100000000000
-                            THEN try_cast(p.receivedtimestamp AS bigint) / 1000.0
-                        ELSE try_cast(p.receivedtimestamp AS bigint)
-                    END
-                )),
-                '%Y-%m-%dT%H:%i:%sZ'
-             )
-    END                                                                     AS "bucketStart",
+    cast(p.partition_0 AS date)                                             AS "date",
     count(*)                                                                AS "packetCount",
     sum(coalesce(cast(p.payloadsize AS bigint), 0))                         AS "totalPayloadSize",
     count(DISTINCT p.gateway)                                               AS "uniqueGateways",

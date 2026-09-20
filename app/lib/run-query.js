@@ -46,11 +46,10 @@ async function runHeliumQueryViaProxy(origin, group, name, params) {
   } catch {
     return {
       success: false,
-      query: `${group}/${name}`,
       error: `Proxy ${origin} returned HTTP ${res.status} (not JSON).`,
     };
   }
-  if (!data.query) data.query = `${group}/${name}`;
+  delete data.query;
   return data;
 }
 
@@ -89,7 +88,6 @@ async function runHeliumQuery(group, name, params = {}) {
     if (err.code === 'ENOENT') {
       return {
         success: false,
-        query: `${group}/${name}`,
         error: 'python3 not found. Set HELIUM_QUERY_PROXY_ORIGIN to a host that runs queries.',
       };
     }
