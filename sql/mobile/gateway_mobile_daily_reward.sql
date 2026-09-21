@@ -32,7 +32,7 @@ SELECT
     cast(partition_0 AS date)                                               AS "rewardDate",
     sum(poc_bones) / 1e6                                                    AS "pocReward",
     sum(dc_bones) / 1e6                                                     AS "dcTransferReward",
-    sum(poc_bones + dc_bones) / 1e6                                         AS "total_reward"
+    sum(poc_bones + dc_bones) / 1e6                                         AS "totalReward"
 FROM rows
 GROUP BY 1
 ORDER BY 1 DESC

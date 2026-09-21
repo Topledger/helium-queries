@@ -135,7 +135,7 @@ cte_lockup AS (
       AND periods IS NOT NULL
 )
 SELECT
-    a.payer AS wallet,
+    a.payer AS "wallet",
     a.nft_mint AS "nftMint",
     a.recipient AS "proxyWallet",
     date_format(CAST(a.block_time AS TIMESTAMP), '%Y-%m-%d') AS "lastProxyAssignedDate",
@@ -171,7 +171,7 @@ SELECT
         WHEN 'Gm9xDCJawDEKDrrQW6haw94gABaYzQwCq4ZQU8h8bd22' THEN 'Mobile'
         WHEN '39Lw1RH6zt8AJvKn3BTxmUDofzduCM2J3kSaGDZ8L7Sk' THEN 'IoT'
         ELSE CASE WHEN s.sub_dao IS NULL THEN NULL ELSE 'Unknown' END
-    END AS network,
+    END AS "network",
     s.sub_dao AS "subDao"
 FROM cte_assigned a
 LEFT JOIN cte_live s ON s.nft_mint = a.nft_mint

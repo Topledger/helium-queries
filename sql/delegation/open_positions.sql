@@ -1,10 +1,10 @@
 -- query_name: DELEGATION_OPEN_POSITIONS
 SELECT
     block_time AS "blockTime",
-    position,
+    position AS "position",
     nft_mint AS "nftMint",
     positionauthority AS "positionAuthority",
-    subdao,
+    subdao AS "subDao",
     tx_id AS "txId",
     instruction_type AS "instructionType"
 FROM (

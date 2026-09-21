@@ -75,9 +75,8 @@ agg AS (
 )
 SELECT
     CAST(snapshot_date AS VARCHAR) AS "snapshotDate",
-    delegated_n + undelegated_n AS positions,
-    CAST(delegated_amt + undelegated_amt * 1e8 AS BIGINT) AS "hntAmount",
-    round(delegated_amt / 1e8 + undelegated_amt, 4) AS "hntStaked",
+    delegated_n + undelegated_n AS "positions",
+    round(delegated_amt / 1e8 + undelegated_amt, 4) AS "hntAmount",
     delegated_n AS "delegatedPositions",
     round(delegated_amt / 1e8, 4) AS "hntDelegated",
     undelegated_n AS "undelegatedPositions",

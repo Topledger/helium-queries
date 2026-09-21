@@ -13,7 +13,7 @@ require('dotenv').config({ path: path.join(REPO_ROOT, '.env') });
 
 const { buildHeliumApisCatalogHtml } = require('./catalog/generate-queries-index.js');
 const { paramsFromRequest } = require('./lib/params-from-request.js');
-const { runHeliumQuery } = require('./lib/run-query.js');
+const { runHeliumQuery, sanitizeQueryError } = require('./lib/run-query.js');
 
 const PORT = Number(process.env.HELIUM_APIS_PORT || process.env.PORT || 8138);
 
@@ -91,22 +91,31 @@ const server = http.createServer(async (req, res) => {
   if (apiMatch && (req.method === 'GET' || req.method === 'POST')) {
     const group = decodeURIComponent(apiMatch[1]);
     const name = decodeURIComponent(apiMatch[2]);
+    const controller = new AbortController();
+    res.on('close', () => {
+      if (!res.writableEnded) controller.abort();
+    });
     try {
       const parsed = await parseRequest(req, url);
       req.query = parsed.query;
       req.body = parsed.body;
       const params = await paramsFromRequest(req);
-      const result = await runHeliumQuery(group, name, params);
+      const result = await runHeliumQuery(group, name, params, {
+        signal: controller.signal,
+      });
       const status = result.success
         ? 200
         : result.error?.includes('not found')
           ? 404
+          : result.error?.includes('temporarily unavailable')
+            ? 503
           : 500;
       sendJson(res, status, result);
     } catch (err) {
+      if (controller.signal.aborted) return;
       sendJson(res, 500, {
         success: false,
-        error: err.message || 'Query execution failed',
+        error: sanitizeQueryError(err),
       });
     }
     return;

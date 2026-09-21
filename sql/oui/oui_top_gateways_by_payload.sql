@@ -8,7 +8,7 @@ SELECT
     a.oui AS "oui",
     b.entity_key AS "entityKey",
     b.key_to_asset_key AS "keyToAssetKey",
-    a.gateway AS "gateway",
+    a.gateway AS "hotspotKey",
     a.total_payloadsize AS "totalPayloadSize"
 FROM (
     SELECT oui, gateway, sum(payloadsize) AS total_payloadsize

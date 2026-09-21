@@ -84,6 +84,7 @@ def default_params(raw: dict[str, Any] | None) -> dict[str, Any]:
         "start_date": start_date,
         "end_date": end_date,
         "entity_key": str(raw.get("entity_key") or ""),
+        "entity_key_b64": str(raw.get("entity_key_b64") or ""),
         "address": str(raw.get("address") or raw.get("hotspot_key") or ""),
         "bucket": str(raw.get("bucket") or "day"),
         "offset": int(raw.get("offset") or 0),
@@ -139,6 +140,8 @@ def _lookup_filter(p: dict[str, Any]) -> str:
         )
     if p["entity_key"]:
         parts.append(f"AND hk.entity_key = '{_escape(p['entity_key'])}'")
+    if p["entity_key_b64"]:
+        parts.append(f"AND hk.entity_key_b64 = '{_escape(p['entity_key_b64'])}'")
     if p["asset_id"]:
         parts.append(f"AND hk.asset_id = '{_escape(p['asset_id'])}'")
     if p["key_to_asset_key"]:
@@ -290,8 +293,20 @@ def bind_sql(template: str, raw_params: dict[str, Any] | None = None) -> str:
     p = default_params(raw_params)
     if "{oui_id}" in template and not p["oui_id"]:
         raise ValueError("oui_id is required")
-    if "{lookup_filter}" in template and not p["address"]:
-        raise ValueError("address or hotspot_key is required")
+    if "{lookup_filter}" in template and not any(
+        p[key]
+        for key in (
+            "address",
+            "entity_key",
+            "entity_key_b64",
+            "asset_id",
+            "key_to_asset_key",
+        )
+    ):
+        raise ValueError(
+            "One of hotspot_key, entity_key, entity_key_b64, asset_id, "
+            "or key_to_asset_key is required"
+        )
     frags = _fragments(template, p)
 
     sql = template

@@ -30,16 +30,14 @@ const STYLE_SRC = path.join(REPO_ROOT, 'app', 'catalog', 'catalog-theme.html');
 const DATA_DIR = path.join(REPO_ROOT, 'data');
 
 const SKIP_QUERY_DIRS = new Set([
+  'filters',
   'gateway',
   'meta',
   'network',
   'relay',
 ]);
 
-const SKIP_CATALOG_QUERIES = new Set([
-  'iot/iot_datarates',
-  'iot/iot_regions',
-]);
+const SKIP_CATALOG_QUERIES = new Set([]);
 
 require('dotenv').config({ path: path.join(REPO_ROOT, '.env') });
 
@@ -58,12 +56,12 @@ const GROUP_ORDER = [
 
 const ENDPOINT_ORDER = {
   hotspot: [
-    'hotspot_get',
-    'hotspots_list',
-    'hotspot_metrics',
     'hotspot_by_maker',
-    'hotspot_lookup_by_key_to_asset',
-    'hotspot_makers',
+    'hotspot_get',
+    'hotspot_metrics',
+    'hotspot_onboard_cadence',
+    'hotspot_network_mix',
+    'hotspot_maker_growth',
   ],
   iot: [
     'iot_hotspot_reward_daily',
@@ -75,8 +73,6 @@ const ENDPOINT_ORDER = {
     'iot_top_hotspots_by_payload_size',
     'iot_gateway_data',
     'iot_gateway_data_sum',
-    'iot_regions',
-    'iot_datarates',
   ],
   mobile: [
     'gateway_mobile_daily_reward',
@@ -95,7 +91,6 @@ const ENDPOINT_ORDER = {
     'oui_dc_usage',
     'oui_packet_size_distribution',
     'oui_top_gateways_by_payload',
-    'oui_list',
   ],
   delegation: [
     'active_stake',
@@ -107,8 +102,104 @@ const ENDPOINT_ORDER = {
   ],
 };
 
-const DEFAULT_HOTSPOT = '112Nmd14Dg9F488SZv7aonHBnsHkQEFiWuvAEtr916qRFfPy3V4c';
-const DEFAULT_OUI = '1';
+const ENDPOINT_TITLES = {
+  'hotspot/hotspot_by_maker': 'Gateways by Maker',
+  'hotspot/hotspot_get': 'Gateway Identity Lookup',
+  'hotspot/hotspot_metrics': 'Gateway Network Totals',
+  'hotspot/hotspot_onboard_cadence': 'Gateway Onboarding Activity',
+  'hotspot/hotspot_network_mix': 'IoT vs Mobile Gateway Count',
+  'hotspot/hotspot_maker_growth': 'Maker Issuance History',
+  'iot/iot_hotspot_reward_daily': 'Gateway IoT Reward by Day',
+  'iot/iot_hotspot_reward_total': 'Gateway IoT Reward Total',
+  'iot/iot_network_reward_daily': 'Network IoT Reward by Day',
+  'iot/iot_network_reward_total': 'Network IoT Reward Total',
+  'iot/iot_packets_daily': 'IoT Packet Activity by Day',
+  'iot/iot_top_hotspots_by_packet_count': 'Top Gateways by IoT Packet Count',
+  'iot/iot_top_hotspots_by_payload_size': 'Top Gateways by IoT Payload',
+  'iot/iot_gateway_data': 'Gateway IoT Data by Day',
+  'iot/iot_gateway_data_sum': 'Gateway IoT Packet Summary',
+  'oui/oui_data': 'OUI Daily Packet Activity',
+  'oui/oui_dc_usage': 'OUI Data Credit Burns',
+  'oui/oui_packet_size_distribution': 'OUI Daily Packet Size Distribution',
+  'delegation/open_positions': 'Open Delegations',
+};
+
+const ENDPOINT_DESCRIPTIONS = {
+  'hotspot/hotspot_by_maker':
+    'Shows how many gateways were issued by each maker. Select a maker to return only that maker.',
+  'hotspot/hotspot_get':
+    'Finds a gateway using any supported identity and returns the keys that link it across Helium and Solana.',
+  'hotspot/hotspot_metrics':
+    'Returns the total number of gateway makers and issued gateways.',
+  'hotspot/hotspot_onboard_cadence':
+    'Shows how many gateways were issued or onboarded to IoT and Mobile in each time period.',
+  'hotspot/hotspot_network_mix':
+    'Shows the current gateway count split between the IoT and Mobile networks.',
+  'hotspot/hotspot_maker_growth':
+    'Shows each maker’s gateway count and the first and latest dates that maker issued a gateway.',
+
+  'iot/iot_hotspot_reward_daily':
+    'Returns one gateway’s IoT rewards for each day, split into beacon, witness, and data-transfer rewards.',
+  'iot/iot_hotspot_reward_total':
+    'Returns one gateway’s total IoT rewards for the selected date range, split by reward type.',
+  'iot/iot_network_reward_daily':
+    'Returns total IoT network rewards for each day, split into beacon, witness, and data-transfer rewards.',
+  'iot/iot_network_reward_total':
+    'Returns total IoT network rewards for the selected date range, including operational-fund rewards.',
+  'iot/iot_packets_daily':
+    'Shows daily IoT packet activity, payload size, estimated Data Credits, and radio-quality metrics.',
+  'iot/iot_top_hotspots_by_packet_count':
+    'Ranks gateways by the number of IoT packets handled during the selected date range.',
+  'iot/iot_top_hotspots_by_payload_size':
+    'Ranks gateways by total IoT payload bytes handled during the selected date range.',
+  'iot/iot_gateway_data':
+    'Shows one gateway’s daily IoT packet volume, payload size, and radio-quality metrics.',
+  'iot/iot_gateway_data_sum':
+    'Summarizes one gateway’s IoT packet and payload activity by hour, day, week, or the full date range.',
+
+  'mobile/gateway_mobile_daily_reward':
+    'Returns one gateway’s daily Mobile rewards, split into coverage and data-transfer rewards.',
+  'mobile/gateway_mobile_daily_data':
+    'Shows one gateway’s daily Mobile data sessions, transferred bytes, and rewardable bytes.',
+  'mobile/gateway_mobile_daily_heartbeat_hours':
+    'Shows one gateway’s daily heartbeat count, valid heartbeats, valid hours, and cell type.',
+  'mobile/gateway_mobile_daily_speedtest_averages':
+    'Shows one gateway’s daily average upload speed, download speed, latency, and reward multiplier.',
+  'mobile/network_mobile_daily_reward':
+    'Returns daily Mobile rewards across the network and the number of gateways that earned rewards.',
+  'mobile/network_mobile_daily_data':
+    'Shows daily Mobile data sessions, transferred bytes, rewardable bytes, and active gateways across the network.',
+  'mobile/network_mobile_daily_heartbeat_hours':
+    'Shows daily Mobile heartbeat coverage across the network, grouped by valid-hour thresholds.',
+  'mobile/network_mobile_daily_speedtest_averages':
+    'Shows daily network-wide Mobile speed-test averages and the number of gateways tested.',
+  'mobile/network_mobile_top_gateways_by_sessions':
+    'Ranks Mobile gateways by data-session count during the selected date range.',
+  'mobile/network_mobile_top_gateways_by_data':
+    'Ranks Mobile gateways by total transferred bytes during the selected date range.',
+
+  'oui/oui_data':
+    'Shows daily IoT packet, payload, and gateway activity for one OUI.',
+  'oui/oui_dc_usage':
+    'Returns the Data Credits burned by one OUI during the selected date range.',
+  'oui/oui_packet_size_distribution':
+    'Shows one row per day and payload-size range for the selected OUI.',
+  'oui/oui_top_gateways_by_payload':
+    'Ranks gateways serving one OUI by total payload bytes during the selected date range.',
+
+  'delegation/active_stake':
+    'Returns current HNT stake totals for delegated and undelegated positions.',
+  'delegation/active_stake_by_dao':
+    'Shows current locked HNT grouped by Mobile, IoT, and undelegated stake.',
+  'delegation/wallet_positions':
+    'Lists a wallet’s open HNT stake positions with deposit, lock, delegation, and voting-power details.',
+  'delegation/delegated_positions':
+    'Lists delegated HNT stake positions with their lock, subDAO, claim, and voting-power details.',
+  'delegation/wallet_proxies':
+    'Lists the latest vote-proxy assignments owned by or assigned to a wallet.',
+  'delegation/open_positions':
+    'Lists stake-position creation events, optionally filtered by authority, NFT mint, or subDAO.',
+};
 
 function readStoredOptions(name) {
   try {
@@ -127,7 +218,7 @@ const STORED_OPTIONS = {
 };
 
 const FRAGMENT_TO_PARAMS = {
-  lookup_filter: ['address', 'entity_key', 'asset_id', 'key_to_asset_key'],
+  lookup_filter: ['address', 'entity_key', 'entity_key_b64', 'asset_id', 'key_to_asset_key'],
   hotspot_filter: ['address'],
   hotspot_filter_radio: ['address'],
   hotspot_filter_gateway: ['address'],
@@ -153,6 +244,7 @@ const PARAM_DISPLAY_ORDER = [
   'min_date',
   'address',
   'entity_key',
+  'entity_key_b64',
   'asset_id',
   'key_to_asset_key',
   'wallet',
@@ -175,6 +267,7 @@ const PARAM_META = {
   start_date: { desc: '' },
   end_date: { desc: '' },
   entity_key: { desc: '' },
+  entity_key_b64: { desc: '' },
   address: { desc: '' },
   bucket: { desc: '' },
   offset: { desc: '' },
@@ -217,7 +310,7 @@ const PARAM_METHOD_DOCS = {
   hotspot_key: {
     type: 'string',
     default: '—',
-    desc: 'Gateway hotspot key. Base58 and long base64 oracle keys are accepted.',
+    desc: 'Gateway key, entity key, base64 entity key, asset ID, or key-to-asset account key.',
   },
   include_operational: {
     type: 'false | true',
@@ -251,8 +344,9 @@ const PARAM_METHOD_DOCS = {
     desc: 'Partition floor (meta freshness query).',
   },
   entity_key: { type: 'string', default: 'empty (all)', desc: 'Helium entity key filter.' },
-  address: { type: 'string', default: 'empty (all)', desc: 'Hotspot / gateway signing pubkey (base58).' },
-  asset_id: { type: 'string', default: 'empty', desc: 'Hotspot compressed-NFT asset id.' },
+  entity_key_b64: { type: 'string', default: 'empty', desc: 'Base64-encoded Helium entity key.' },
+  address: { type: 'string', default: 'empty (all)', desc: 'Gateway signing pubkey (base58).' },
+  asset_id: { type: 'string', default: 'empty', desc: 'Gateway compressed-NFT asset ID.' },
   key_to_asset_key: { type: 'string', default: 'empty', desc: 'Key-to-asset account pubkey.' },
   wallet: { type: 'string', default: 'empty', desc: 'Solana wallet pubkey.' },
   role: { type: 'owner | proxy', default: 'owner', desc: 'Wallet proxy role (wallet_proxies).' },
@@ -265,7 +359,7 @@ const PARAM_METHOD_DOCS = {
   network: { type: 'Mobile | IoT', default: 'empty', desc: 'Network shorthand (maps to sub-DAO mint).' },
   authority: { type: 'string', default: 'empty', desc: 'Position authority (alias: position_authority).' },
   status: { type: 'delegated | undelegated', default: 'empty', desc: 'Delegation status filter.' },
-  maker: { type: 'string', default: 'empty', desc: 'Hotspot maker pubkey.' },
+  maker: { type: 'string', default: 'empty', desc: 'Gateway maker name. Leave empty to include all makers.' },
   packet_type: { type: 'string', default: 'empty', desc: 'IoT packet type (alias: type).' },
   free: { type: 'true | false', default: 'empty', desc: 'Free vs paid IoT packets.' },
   now_ts: { type: 'integer (unix s)', default: 'current UTC', desc: 'Reference time for delegation lock / voting power.' },
@@ -321,27 +415,38 @@ function sortParamsForDisplay(params) {
 
 /** Output column descriptions (camelCase keys match SQL AS "…" aliases). */
 const FIELD_DESCRIPTIONS = {
-  address: 'Hotspot / gateway signing pubkey (base58).',
+  address: 'Base58 signing key used to identify the gateway.',
   hotspotKey: 'Gateway signing pubkey used for PoC beacons and witnesses.',
-  entityKey: 'Canonical Helium Entity Manager entity identifier (bytes).',
-  entityKeyB64: 'Entity key, base64-encoded for oracle JSON transport.',
-  keyToAssetKey: 'HEM PDA linking entity + DAO to on-chain asset_id (cNFT).',
-  assetId: 'Compressed-NFT asset address for the hotspot entity.',
-  keySerialization: 'Entity key encoding for hashing (e.g. b58, utf8).',
-  dao: 'DAO scope: IoT or Mobile rewards namespace.',
-  mintDate: 'Entity / cNFT mint timestamp.',
-  cbsdId: 'Mobile CBRS radio device id (one hotspot may have many).',
+  entityKey: 'Canonical Helium Entity Manager key for this gateway.',
+  entityKeyB64: 'The same entity key encoded as base64.',
+  keyToAssetKey: 'Solana account that links the Helium entity key to its compressed NFT.',
+  assetId: 'Solana compressed-NFT asset ID representing the gateway.',
+  keySerialization: 'Encoding used for the entity key, such as b58 or utf8.',
+  dao: 'Raw Solana DAO or subDAO mint recorded for the gateway.',
+  networks: 'Networks this gateway is onboarded to: IoT, Mobile, or both.',
+  subDaos: 'SubDAO mint addresses for the networks this gateway is onboarded to.',
+  mintDate: 'Date the gateway entity was first issued or minted, in YYYY-MM-DD format.',
+  date: 'Calendar date for this row, in YYYY-MM-DD format.',
+  network: 'Helium network membership: IoT or Mobile.',
+  cbsdId: 'Mobile CBRS radio device ID (one gateway may have many).',
   coverageObject: 'Coverage hex snapshot UUID for Mobile reward attribution.',
-  subscriberId: 'Mobile subscriber entity key (user, not hotspot).',
+  subscriberId: 'Mobile subscriber entity key (user, not gateway).',
   beaconAmount: 'IoT PoC beacon reward (whole tokens; source is bones ÷ 1e6).',
   witnessAmount: 'IoT PoC witness reward (whole tokens).',
   dcTransferAmount: 'IoT DC transfer reward (whole tokens).',
+  beaconIot: 'IoT beacon rewards in whole IOT tokens.',
+  witnessIot: 'IoT witness rewards in whole IOT tokens.',
+  dcTransferIot: 'IoT data-transfer rewards in whole IOT tokens.',
+  operationalIot: 'IoT rewards allocated to the network operational fund, in whole IOT tokens.',
+  totalIot: 'Total IoT rewards in whole IOT tokens.',
+  dailyReward: 'Total rewards earned on this date in whole tokens.',
   dcTransferReward: 'Mobile DC transfer reward (whole tokens).',
   pocReward: 'Mobile PoC reward for a radio (whole tokens).',
   discoveryLocationAmount: 'Mobile subscriber onboarding / discovery reward.',
   total_reward: 'Row total reward in whole tokens (sum of components).',
   totalReward: 'Row total reward in whole tokens.',
   partitionDate: 'Oracle partition date for the reward or data row.',
+  rewardDate: 'Date the rewards were recorded, in YYYY-MM-DD format.',
   startPeriod: 'Reward period start (epoch / period id).',
   endPeriod: 'Reward period end (epoch / period id).',
   rewardType: 'Mobile reward line type (PoC, DC transfer, etc.).',
@@ -358,8 +463,7 @@ const FIELD_DESCRIPTIONS = {
   lastDelegatedDate: 'Last time the position was delegated.',
   lastProxyAssignedDate: 'Last proxy assignment for the stake NFT.',
   lastClaimedEpoch: 'Most recent claimed rewards epoch.',
-  hntAmount: 'HNT amount (atomic or scaled per query).',
-  hntStaked: 'HNT staked total (human-readable units).',
+  hntAmount: 'HNT amount in whole HNT, rounded to four decimal places.',
   hntDelegated: 'HNT currently delegated to sub-DAOs.',
   hntUndelegated: 'HNT locked but not delegated.',
   delegatedPositions: 'Count of delegated stake positions.',
@@ -374,16 +478,31 @@ const FIELD_DESCRIPTIONS = {
   bumpSeed: 'On-chain PDA bump seed.',
   claimedEpochsBitmap: 'Bitmap of claimed reward epochs.',
   proxyWallet: 'Wallet assigned as vote proxy.',
+  wallet: 'Wallet that owns the stake position or assigned the vote proxy.',
+  position: 'Solana account for the stake or delegation position.',
+  positions: 'Number of stake positions.',
+  kind: 'Lock type: Cliff or Constant.',
+  status: 'Current stake status: delegated or undelegated.',
+  purged: 'Whether the delegated-position record has been purged.',
   positionAuthority: 'Authority that opened the position.',
   instructionType: 'On-chain instruction name for the event.',
   txId: 'Solana transaction signature.',
-  makerName: 'Hotspot maker display name.',
-  makerCount: 'Distinct hotspot makers.',
-  hotspotCount: 'Number of hotspots.',
+  makerName: 'Gateway maker display name.',
+  makerCount: 'Number of distinct gateway makers.',
+  hotspotCount: 'Number of gateways.',
+  uniqueHotspots: 'Number of distinct gateways.',
+  issuedCount: 'Distinct gateways issued in the period.',
+  iotOnboardCount: 'Distinct gateways onboarded to IoT in the period.',
+  mobileOnboardCount: 'Distinct gateways onboarded to Mobile in the period.',
+  firstMintDate: 'Earliest issue or onboard date for this maker.',
+  lastMintDate: 'Most recent issue or onboard date for this maker.',
   tableName: 'Oracle table name.',
   maxPartitionDate: 'Latest partition_0 date loaded for the table.',
   packetCount: 'Number of LoRaWAN / data packets.',
   totalPayloadSize: 'Sum of payload bytes.',
+  avgPayloadSize: 'Average packet payload size in bytes.',
+  minPayloadSize: 'Smallest packet payload size in bytes.',
+  maxPayloadSize: 'Largest packet payload size in bytes.',
   payloadSize: 'Single packet payload size (bytes).',
   payloadHash: 'Packet payload hash (duplicate detection).',
   payloadSizeGroup: 'Histogram bucket for payload sizes.',
@@ -391,8 +510,13 @@ const FIELD_DESCRIPTIONS = {
   uplinkCount: 'Uplink packet count.',
   freeCount: 'Free packet count.',
   paidCount: 'Paid packet count.',
+  paidPacketCount: 'Number of packets that consumed Data Credits.',
   freePayloadSize: 'Payload bytes on free packets.',
   paidPayloadSize: 'Payload bytes on paid packets.',
+  paidPayloadBytes: 'Payload bytes carried by paid packets.',
+  dataCredits: 'Estimated Data Credits consumed (one DC per 24 payload bytes per packet).',
+  estimatedDc: 'Estimated Data Credits consumed, using one DC per 24 payload bytes per paid packet.',
+  paidPct: 'Percentage of packets that were billed.',
   appearances: 'Times the same payload hash was seen.',
   packetType: 'IoT packet type (join, uplink, etc.).',
   dataRate: 'LoRaWAN data rate identifier.',
@@ -407,6 +531,8 @@ const FIELD_DESCRIPTIONS = {
   minSnr: 'Minimum SNR in bucket.',
   maxSnr: 'Maximum SNR in bucket.',
   avgFrequency: 'Average frequency (Hz).',
+  minFrequency: 'Minimum frequency in Hz.',
+  maxFrequency: 'Maximum frequency in Hz.',
   oui: 'LoRaWAN OUI (organization) id.',
   netId: 'LoRaWAN NetID.',
   free: 'Whether the packet was free (boolean).',
@@ -441,10 +567,120 @@ const FIELD_DESCRIPTIONS = {
   gatewaysWith12h: 'Gateways meeting 12h heartbeat threshold.',
   gatewaysWith18h: 'Gateways meeting 18h heartbeat threshold.',
   avgValidHours: 'Average valid heartbeat hours.',
+  validHeartbeatHours: 'Number of distinct hours containing at least one valid heartbeat.',
   lastDayDcUsage: 'DC usage in the last day.',
   last7DaysDcUsage: 'DC usage in the last 7 days.',
+  dcUsage: 'Data Credits burned by the OUI during the selected date range.',
   gateway: 'Gateway identifier in OUI ranking queries.',
 };
+
+const FIELD_TYPES = {
+  address: 'string',
+  assetId: 'string',
+  entityKey: 'string',
+  entityKeyB64: 'string',
+  keyToAssetKey: 'string',
+  keySerialization: 'string',
+  dao: 'string',
+  networks: 'string[]',
+  subDaos: 'string[]',
+  mintDate: 'date | null',
+  amountDeposited: 'number',
+  estimatedDc: 'integer',
+  gatewaysWithHeartbeat: 'integer',
+  gatewaysWith4h: 'integer',
+  gatewaysWith12h: 'integer',
+  gatewaysWith18h: 'integer',
+  rewardMultiplierAvg: 'number',
+  positions: 'integer',
+  purged: 'boolean',
+};
+
+const STRING_FIELDS = new Set([
+  'address',
+  'assetId',
+  'cellType',
+  'coverageObject',
+  'dao',
+  'entityKey',
+  'entityKeyB64',
+  'eventId',
+  'gateway',
+  'hotspotKey',
+  'instructionType',
+  'keySerialization',
+  'keyToAssetKey',
+  'makerName',
+  'network',
+  'nftMint',
+  'oui',
+  'payer',
+  'payloadHash',
+  'payloadSizeGroup',
+  'positionAuthority',
+  'position',
+  'proxyWallet',
+  'radioAccessTechnology',
+  'region',
+  'rewardType',
+  'subDao',
+  'subscriberId',
+  'tableName',
+  'tokenSymbol',
+  'txId',
+  'wallet',
+  'kind',
+  'status',
+]);
+
+const DATE_FIELDS = new Set([
+  'blockDate',
+  'bucketStart',
+  'date',
+  'endDate',
+  'expirationDate',
+  'firstMintDate',
+  'landrushEndDate',
+  'lastDelegatedDate',
+  'lastMintDate',
+  'lastProxyAssignedDate',
+  'lockEndDate',
+  'maxPartitionDate',
+  'mintDate',
+  'partitionDate',
+  'rewardDate',
+  'snapshotDate',
+  'startDate',
+]);
+
+const DATETIME_FIELDS = new Set([
+  'blockTime',
+  'hourStart',
+  'receivedTimestamp',
+  'usageTimestamp',
+]);
+
+function fieldType(field) {
+  if (FIELD_TYPES[field]) return FIELD_TYPES[field];
+  if (STRING_FIELDS.has(field)) return 'string';
+  if (DATE_FIELDS.has(field)) return 'date';
+  if (DATETIME_FIELDS.has(field)) return 'datetime';
+  if (field === 'free' || field === 'rewardCancelled') return 'boolean';
+  if (/^(avg|min|max)/.test(field)) return 'number';
+  if (
+    /(Count|Bytes|Size|Hours|Epoch|Positions|Gateways|Hotspots|Radios|Subscribers)$/.test(field) ||
+    ['appearances', 'bumpSeed', 'claimedEpochsBitmap', 'frequency', 'joinCount', 'offset', 'uplinkCount'].includes(field)
+  ) {
+    return 'integer';
+  }
+  if (
+    /(Amount|Reward|Iot|Pct|Percent|Power|Staked|Delegated|Undelegated|Rssi|Snr|Frequency|Bps|Ms|Multiplier|Usage)$/.test(field) ||
+    ['hntAmount', 'total_reward'].includes(field)
+  ) {
+    return 'number';
+  }
+  return 'string | number | null';
+}
 
 function fieldDescription(field) {
   if (FIELD_DESCRIPTIONS[field]) return FIELD_DESCRIPTIONS[field];
@@ -461,7 +697,11 @@ function parseOutputColumns(sql) {
   while ((m = re.exec(sql))) {
     if (!seen.has(m[1])) {
       seen.add(m[1]);
-      cols.push({ field: m[1], type: 'varies', description: fieldDescription(m[1]) });
+      cols.push({
+        field: m[1],
+        type: fieldType(m[1]),
+        description: fieldDescription(m[1]),
+      });
     }
   }
   return cols;
@@ -483,6 +723,10 @@ function groupLabel(g) {
   if (g === 'iot') return 'IoT';
   if (g === 'oui') return 'OUI';
   return g.charAt(0).toUpperCase() + g.slice(1);
+}
+
+function endpointTitle(group, name) {
+  return ENDPOINT_TITLES[`${group}/${name}`] || titleCase(name);
 }
 
 function sortQueryFiles(group, files) {
@@ -518,7 +762,6 @@ function defaultDates() {
 function paramRequired(group, name, param) {
   if (group === 'oui' && param === 'oui_id') return true;
   if (name === 'radio_rewards_sum' && param === 'cbsd_id') return true;
-  if (name === 'hotspot_lookup_by_key_to_asset' && param === 'key_to_asset_key') return true;
   if (name === 'wallet_proxies' && param === 'wallet') return true;
   return false;
 }
@@ -597,15 +840,13 @@ function endpointFilters(group, name, dates, inferred) {
   const gatewayDates = () => [
     filter('address', 'Gateway', 'text', {
       required: true,
-      default: DEFAULT_HOTSPOT,
       description: 'Gateway key, entity key, base64 entity key, asset id, or key-to-asset key.',
     }),
     ...dateFilters(dates),
   ];
   const hotspotDates = () => [
-    filter('hotspot_key', 'Hotspot key', 'text', {
+    filter('hotspot_key', 'Gateway key', 'text', {
       required: true,
-      default: DEFAULT_HOTSPOT,
     }),
     ...dateFilters(dates),
   ];
@@ -616,8 +857,9 @@ function endpointFilters(group, name, dates, inferred) {
   const ouiDates = () => [
     filter('oui_id', 'OUI id', 'select', {
       required: true,
-      default: DEFAULT_OUI,
-      options: STORED_OPTIONS.ouis.length ? STORED_OPTIONS.ouis : [DEFAULT_OUI],
+      options: STORED_OPTIONS.ouis,
+      includeEmpty: true,
+      emptyLabel: 'Select OUI',
     }),
     ...dateFilters(dates),
   ];
@@ -649,28 +891,32 @@ function endpointFilters(group, name, dates, inferred) {
   }
 
   if (group === 'hotspot') {
+    const makerSelect = filter('maker', 'Maker', 'select', {
+      options: STORED_OPTIONS.makers,
+      includeEmpty: true,
+      emptyLabel: STORED_OPTIONS.makers.length
+        ? `All makers (${STORED_OPTIONS.makers.length})`
+        : 'All makers',
+    });
+    if (name === 'hotspot_onboard_cadence') {
+      return [
+        ...datesOnly(),
+        filter('bucket', 'Bucket', 'select', {
+          default: 'day',
+          options: ['day', 'week', 'month', 'total'],
+        }),
+      ];
+    }
     const byName = {
-      hotspot_by_maker: [
-        filter('maker', 'Maker', 'select', {
-          options: STORED_OPTIONS.makers,
-          includeEmpty: true,
-          emptyLabel: STORED_OPTIONS.makers.length
-            ? `All makers (${STORED_OPTIONS.makers.length})`
-            : 'All makers',
+      hotspot_by_maker: [makerSelect],
+      hotspot_maker_growth: [makerSelect],
+      hotspot_network_mix: [],
+      hotspot_get: [
+        filter('hotspot_key', 'Gateway identity', 'text', {
+          required: true,
         }),
       ],
-      hotspot_get: [
-        filter('address', 'Gateway', 'text', { required: true, default: DEFAULT_HOTSPOT }),
-      ],
-      hotspot_lookup_by_key_to_asset: [
-        filter('key_to_asset_key', 'Key to asset', 'text', { required: true }),
-      ],
-      hotspot_makers: [],
       hotspot_metrics: [],
-      hotspots_list: [
-        filter('offset', 'Offset', 'number', { default: '0' }),
-        filter('limit', 'Per page', 'number', { default: '100' }),
-      ],
     };
     if (Object.prototype.hasOwnProperty.call(byName, name)) return byName[name];
   }
@@ -682,15 +928,7 @@ function endpointFilters(group, name, dates, inferred) {
       return hotspotDates();
     }
     if (name === 'iot_network_reward_daily') return datesOnly();
-    if (name === 'iot_network_reward_total') {
-      return [
-        ...datesOnly(),
-        filter('include_operational', 'Include operational', 'select', {
-          default: 'false',
-          options: ['false', 'true'],
-        }),
-      ];
-    }
+    if (name === 'iot_network_reward_total') return datesOnly();
     if (name === 'iot_packets_daily') {
       return [
         ...datesOnly(),
@@ -788,12 +1026,16 @@ function collectEndpoints(baseUrl) {
       const params = apiParamsForSql(sql);
       const id = `${g.name}-${name}`;
       const apiPath = `/api/helium/${g.name}/${name}`;
+      const clientDescription =
+        ENDPOINT_DESCRIPTIONS[`${g.name}/${name}`] ||
+        description ||
+        `Returns data for this ${groupLabel(g.name)} endpoint.`;
       endpoints.push({
         id,
-        title: titleCase(name),
+        title: endpointTitle(g.name, name),
         query_name: queryName,
-        description: description || `Helium ${g.name} query.`,
-        long_description: description,
+        description: clientDescription,
+        long_description: clientDescription,
         method: 'GET',
         path: apiPath,
         url: BASE + apiPath,
@@ -985,7 +1227,7 @@ function renderCodeSamplesCard(item) {
 function renderSampleCard() {
   return `<div class="section-card sample-card sample-collapsed">
       <div class="section-card-head sample-card-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-        <span>Sample response</span>
+        <span>Response</span>
         <div class="sample-toolbar">
           ${renderCopyIconButton('copy-sample-btn', 'Copy JSON', ' disabled')}
           <button class="icon-btn download-sample-csv-btn" type="button" title="Download CSV" aria-label="Download CSV" disabled>
@@ -996,7 +1238,7 @@ function renderSampleCard() {
       </div>
       <div class="section-card-body sample-card-body" hidden>
         <div class="sample-meta" hidden></div>
-        <input class="sample-search" type="search" placeholder="Search sample…" autocomplete="off" disabled>
+        <input class="sample-search" type="search" placeholder="Search response…" autocomplete="off" disabled>
         <div class="sample-view-tabs" role="tablist" hidden>
           <button type="button" class="sample-view-tab active" data-sample-view="json" role="tab" aria-selected="true">JSON</button>
           <button type="button" class="sample-view-tab" data-sample-view="table" role="tab" aria-selected="false">Table</button>
@@ -1026,7 +1268,7 @@ function renderPanel(item, isFirst) {
               })
               .join('')}</tbody>
           </table>`
-    : `<p class="hint" style="margin:0;padding:16px">No schema columns parsed — use sample response.</p>`;
+    : `<p class="hint" style="margin:0;padding:16px">No schema columns parsed — load the response to inspect its fields.</p>`;
 
   const schemaHtml = renderCollapsibleSection('Response schema', schemaBody, {
     bodyStyle: 'padding:0;overflow-x:auto',
@@ -1416,17 +1658,6 @@ function runtimeScript(dates) {
       if (wrap) wrap.hidden = false;
     }
 
-    function buildSampleUrl(panel) {
-      const url = buildUrl(panel);
-      try {
-        const u = new URL(url);
-        if (!u.searchParams.has("limit")) u.searchParams.set("limit", "25");
-        return u.toString();
-      } catch (e) {
-        return url;
-      }
-    }
-
     function sampleDownloadBaseName(panel) {
       const data = JSON.parse(panel.dataset.endpoint);
       return (data.path || "sample").replace(/^\\/api\\/helium\\//, "").replace(/\\//g, "_");
@@ -1486,11 +1717,19 @@ function runtimeScript(dates) {
 
     const LOAD_SAMPLE_BTN_LABEL = "Load response";
 
-    function setLoadSampleBtnProgress(panel, pct) {
+    function formatElapsed(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      return minutes + ":" + seconds;
+    }
+
+    function setLoadSampleBtnRunning(panel, elapsed) {
       const loadBtn = panel.querySelector(".load-sample-btn");
       if (!loadBtn) return;
-      loadBtn.disabled = true;
-      loadBtn.textContent = Math.round(Math.max(0, Math.min(100, pct))) + "%";
+      loadBtn.disabled = false;
+      loadBtn.textContent = "Cancel · " + formatElapsed(elapsed);
+      loadBtn.title = "Query running. Click to cancel.";
     }
 
     function resetLoadSampleBtn(panel, enabled) {
@@ -1498,44 +1737,64 @@ function runtimeScript(dates) {
       if (!loadBtn) return;
       loadBtn.textContent = LOAD_SAMPLE_BTN_LABEL;
       loadBtn.disabled = !enabled;
+      loadBtn.title = "";
     }
 
-    function setSampleProgress(panel, pct) {
+    function setSampleRunning(panel, elapsed) {
       const card = panel.querySelector(".sample-card");
-      const fill = panel.querySelector(".sample-edge-progress-fill");
       if (card) card.classList.add("sample-fetching");
-      if (fill) fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
-      setLoadSampleBtnProgress(panel, pct);
+      setLoadSampleBtnRunning(panel, elapsed);
     }
 
     function stopSampleProgress(panel) {
-      if (panel._progressTimer) cancelAnimationFrame(panel._progressTimer);
+      if (panel._progressTimer) clearInterval(panel._progressTimer);
       panel._progressTimer = null;
     }
 
     function startSampleProgress(panel) {
-      setSampleProgress(panel, 0);
       panel._progressStart = performance.now();
+      const fill = panel.querySelector(".sample-edge-progress-fill");
+      if (fill) {
+        fill.style.width = "";
+        fill.style.animation = "";
+        fill.style.transform = "";
+      }
       const tick = () => {
         const elapsed = performance.now() - panel._progressStart;
-        setSampleProgress(panel, Math.min(90, elapsed / 50));
-        panel._progressTimer = requestAnimationFrame(tick);
+        setSampleRunning(panel, elapsed);
       };
-      panel._progressTimer = requestAnimationFrame(tick);
+      tick();
+      panel._progressTimer = setInterval(tick, 250);
     }
 
     function hideSampleProgress(panel) {
       const card = panel.querySelector(".sample-card");
       const fill = panel.querySelector(".sample-edge-progress-fill");
       if (card) card.classList.remove("sample-fetching");
-      if (fill) fill.style.width = "0%";
+      if (fill) {
+        fill.style.width = "";
+        fill.style.animation = "";
+        fill.style.transform = "";
+      }
       resetLoadSampleBtn(panel, true);
     }
 
     function finishSampleProgress(panel, ok) {
       stopSampleProgress(panel);
       if (ok) {
-        setSampleProgress(panel, 100);
+        const elapsed = performance.now() - panel._progressStart;
+        const loadBtn = panel.querySelector(".load-sample-btn");
+        const fill = panel.querySelector(".sample-edge-progress-fill");
+        if (fill) {
+          fill.style.animation = "none";
+          fill.style.transform = "translateX(0)";
+          fill.style.width = "100%";
+        }
+        if (loadBtn) {
+          loadBtn.disabled = true;
+          loadBtn.textContent = "Done · " + formatElapsed(elapsed);
+          loadBtn.title = "";
+        }
         return new Promise(function(resolve) {
           setTimeout(function() {
             hideSampleProgress(panel);
@@ -1548,6 +1807,10 @@ function runtimeScript(dates) {
     }
 
     async function loadSample(panel) {
+      if (panel._abortController) {
+        panel._abortController.abort();
+        return;
+      }
       const body = panel.querySelector(".sample-body");
       if (!body) return;
       collapseSamplePanel(panel);
@@ -1562,9 +1825,11 @@ function runtimeScript(dates) {
       setSampleActions(panel, false);
       body.className = "sample-body";
       body.textContent = "";
+      const controller = new AbortController();
+      panel._abortController = controller;
       startSampleProgress(panel);
       try {
-        const res = await fetch(buildSampleUrl(panel));
+        const res = await fetch(buildUrl(panel), { signal: controller.signal });
         const data = await res.json();
         if (!res.ok || data.success === false) throw new Error(data.error || res.statusText);
         await finishSampleProgress(panel, true);
@@ -1578,9 +1843,12 @@ function runtimeScript(dates) {
         await finishSampleProgress(panel, false);
         expandSamplePanel(panel);
         body.className = "sample-body sample-error";
-        body.textContent = "Sample failed: " + err.message;
+        body.textContent = err.name === "AbortError"
+          ? "Request cancelled after " + formatElapsed(performance.now() - panel._progressStart) + "."
+          : "Request failed: " + err.message;
         setSampleActions(panel, false);
       } finally {
+        if (panel._abortController === controller) panel._abortController = null;
         if (!panel.querySelector(".sample-card")?.classList.contains("sample-fetching")) {
           resetLoadSampleBtn(panel, true);
         }
@@ -1703,6 +1971,14 @@ const SAMPLE_VIEW_STYLES = `
       background: var(--purple-bright);
       transition: width 0.12s linear;
     }
+    .sample-card.sample-fetching .sample-edge-progress-fill {
+      width: 35%;
+      animation: sample-progress-running 1.2s ease-in-out infinite;
+    }
+    @keyframes sample-progress-running {
+      from { transform: translateX(-110%); }
+      to { transform: translateX(300%); }
+    }
     .sample-meta[hidden] { display: none !important; }
     .sample-view-tabs { display: flex; gap: 2px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
     .sample-view-tabs[hidden] { display: none !important; }
@@ -1717,7 +1993,7 @@ const SAMPLE_VIEW_STYLES = `
     .sample-pane { display: none; }
     .sample-pane.active { display: block; }
     .sample-table-wrap {
-      overflow: auto; max-height: 420px; border: 1px solid var(--border);
+      overflow-x: auto; border: 1px solid var(--border);
       border-radius: 0; background: var(--surface-inset);
     }
     .sample-table {

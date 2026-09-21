@@ -182,7 +182,7 @@ cte_last_proxy_assigned AS (
     WHERE rn = 1
 )
 SELECT
-    w.wallet,
+    w.wallet AS "wallet",
     s.nft_mint AS "nftMint",
     'HNT' AS "tokenSymbol",
     ROUND(
@@ -203,7 +203,7 @@ SELECT
         WHEN 'cliff' THEN 'Cliff'
         WHEN 'constant' THEN 'Constant'
         ELSE lk.kind
-    END AS kind,
+    END AS "kind",
     CASE
         WHEN g.genesis_end IS NOT NULL
         THEN date_format(from_unixtime(g.genesis_end) AT TIME ZONE 'UTC', '%Y-%m-%d')
@@ -230,11 +230,11 @@ SELECT
             END
         , 2)
     END AS "votingPower",
-    s.position,
+    s.position AS "position",
     CASE
         WHEN s.hnt_amount IS NOT NULL THEN 'delegated'
         ELSE 'undelegated'
-    END AS status,
+    END AS "status",
     CASE
         WHEN d.block_time IS NULL THEN NULL
         ELSE date_format(CAST(d.block_time AS TIMESTAMP), '%Y-%m-%d')
@@ -247,7 +247,7 @@ SELECT
         WHEN 'Gm9xDCJawDEKDrrQW6haw94gABaYzQwCq4ZQU8h8bd22' THEN 'Mobile'
         WHEN '39Lw1RH6zt8AJvKn3BTxmUDofzduCM2J3kSaGDZ8L7Sk' THEN 'IoT'
         ELSE CASE WHEN s.sub_dao IS NULL THEN NULL ELSE 'Unknown' END
-    END AS network,
+    END AS "network",
     s.sub_dao AS "subDao"
 FROM cte_base s
 LEFT JOIN cte_wallet w ON w.nft_mint = s.nft_mint

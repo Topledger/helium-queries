@@ -29,7 +29,7 @@ SELECT
     count(DISTINCT hotspot_key)                                             AS "uniqueHotspots",
     sum(poc_bones) / 1e6                                                    AS "pocReward",
     sum(dc_bones) / 1e6                                                     AS "dcTransferReward",
-    sum(poc_bones + dc_bones) / 1e6                                         AS "total_reward"
+    sum(poc_bones + dc_bones) / 1e6                                         AS "totalReward"
 FROM rows
 GROUP BY 1
 ORDER BY 1 DESC

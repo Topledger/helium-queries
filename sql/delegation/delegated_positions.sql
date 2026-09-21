@@ -8,20 +8,20 @@
 -- Lock end = latest InitializePositionV0 / ResetLockupV0 time + periods (days).
 SELECT
     CAST(d.block_date AS VARCHAR) AS "blockDate",
-    w.wallet,
+    w.wallet AS "wallet",
     CASE lower(lk.kind)
         WHEN 'cliff' THEN 'Cliff'
         WHEN 'constant' THEN 'Constant'
         ELSE lk.kind
-    END AS kind,
+    END AS "kind",
     d.mint AS "nftMint",
-    d.position,
-    d.hnt_amount AS "hntAmount",
+    d.position AS "position",
+    round(CAST(d.hnt_amount AS DOUBLE) / 1e8, 4) AS "hntAmount",
     CASE d.sub_dao
         WHEN 'Gm9xDCJawDEKDrrQW6haw94gABaYzQwCq4ZQU8h8bd22' THEN 'Mobile'
         WHEN '39Lw1RH6zt8AJvKn3BTxmUDofzduCM2J3kSaGDZ8L7Sk' THEN 'IoT'
         ELSE 'Unknown'
-    END AS network,
+    END AS "network",
     d.sub_dao AS "subDao",
     CASE
         WHEN lk.lock_end_ts IS NULL OR lk.lockup_ts IS NULL THEN NULL
@@ -56,7 +56,7 @@ SELECT
         WHEN lk.lock_end_ts IS NULL OR lk.lock_end_ts = 0 THEN NULL
         ELSE date_format(from_unixtime(lk.lock_end_ts) AT TIME ZONE 'UTC', '%Y-%m-%d')
     END AS "lockEndDate",
-    d.purged,
+    d.purged AS "purged",
     d.bump_seed AS "bumpSeed",
     d.claimed_epochs_bitmap AS "claimedEpochsBitmap",
     CASE

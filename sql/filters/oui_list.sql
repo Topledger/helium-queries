@@ -1,5 +1,5 @@
 -- query_name: OUI_LIST
--- Valid OUI identifiers for UI dropdowns.
+-- Lookup: valid OUI identifiers for the OUI dropdown.
 SELECT DISTINCT
     cast(oui AS varchar) AS "oui"
 FROM helium.oui_mapping

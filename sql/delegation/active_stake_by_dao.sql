@@ -71,20 +71,18 @@ by_group AS (
             WHEN 'Gm9xDCJawDEKDrrQW6haw94gABaYzQwCq4ZQU8h8bd22' THEN 'Mobile'
             WHEN '39Lw1RH6zt8AJvKn3BTxmUDofzduCM2J3kSaGDZ8L7Sk' THEN 'IoT'
             ELSE 'Unknown'
-        END AS network,
+        END AS "network",
         d.sub_dao AS "subDao",
-        count(*) AS positions,
-        sum(d.hnt_amount) AS "hntAmount",
-        round(sum(CAST(d.hnt_amount AS DOUBLE)) / 1e8, 4) AS "hntStaked"
+        count(*) AS "positions",
+        round(sum(CAST(d.hnt_amount AS DOUBLE)) / 1e8, 4) AS "hntAmount"
     FROM cte_live d
     GROUP BY 1, 2
     UNION ALL
     SELECT
-        'Undelegated' AS network,
+        'Undelegated' AS "network",
         NULL AS "subDao",
-        count(*) AS positions,
-        CAST(sum(amount_deposited * 1e8) AS BIGINT) AS "hntAmount",
-        round(sum(amount_deposited), 4) AS "hntStaked"
+        count(*) AS "positions",
+        round(sum(amount_deposited), 4) AS "hntAmount"
     FROM cte_undelegated
 ),
 grand AS (
@@ -92,14 +90,13 @@ grand AS (
     FROM by_group
 )
 SELECT
-    b.network,
+    b."network",
     b."subDao",
-    b.positions,
+    b."positions",
     b."hntAmount",
-    b."hntStaked",
     round(100.0 * CAST(b."hntAmount" AS DOUBLE) / NULLIF(g.total_amount, 0), 2) AS "stakePercent"
 FROM by_group b
 CROSS JOIN grand g
 WHERE 1 = 1
   {subdao_filter}
-ORDER BY b."hntStaked" DESC
+ORDER BY b."hntAmount" DESC
