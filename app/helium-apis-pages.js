@@ -19,7 +19,7 @@ function heliumProxyOrigin() {
 
 function patchCatalogHtmlBase(html, pageOrigin) {
   return html.replace(
-    /const BASE = window\.location\.origin;/,
+    /const BASE = [^;]+;/,
     `const BASE = ${JSON.stringify(pageOrigin)};`,
   );
 }
@@ -87,10 +87,9 @@ async function getHeliumCatalogPageResponse(request) {
   }
 
   try {
-    const html = patchCatalogHtmlBase(
-      buildHeliumApisCatalogHtml({ baseUrl: pageOrigin }),
-      pageOrigin,
-    );
+    // Keep runtime BASE = window.location.origin (browser host). Do not patch with
+    // requestUrl.origin — next dev uses http://0.0.0.0:8137 and breaks fetch().
+    const html = buildHeliumApisCatalogHtml();
     return new Response(html, { status: 200, headers: HTML_HEADERS });
   } catch (err) {
     const upstream = heliumProxyOrigin();
