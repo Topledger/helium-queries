@@ -27,6 +27,10 @@ const REPO_ROOT = resolveQueriesRoot();
 const QUERIES = path.join(REPO_ROOT, SQL_DIR);
 const OUT = path.join(REPO_ROOT, 'index.html');
 const STYLE_SRC = path.join(REPO_ROOT, 'app', 'catalog', 'catalog-theme.html');
+const DATE_RANGE_PICKER_RUNTIME = fs.readFileSync(
+  path.join(REPO_ROOT, 'app', 'catalog', 'date-range-picker.init.js'),
+  'utf8'
+);
 const DATA_DIR = path.join(REPO_ROOT, 'data');
 
 const SKIP_QUERY_DIRS = new Set([
@@ -773,10 +777,10 @@ function paramToFilter(p, group, name, dates) {
   let defaultVal = '';
   if (p === 'start_date') {
     type = 'date';
-    defaultVal = dates.start;
+    defaultVal = '';
   } else if (p === 'end_date') {
     type = 'date';
-    defaultVal = dates.end;
+    defaultVal = '';
   } else if (p === 'min_date') {
     type = 'date';
     defaultVal = '2024-01-01';
@@ -824,31 +828,31 @@ function filter(name, label, type = 'text', extra = {}) {
   };
 }
 
-function dateFilters(dates) {
+function dateFilters() {
   return [
     filter('from', 'From', 'date', {
-      default: dates.start,
+      default: '',
     }),
     filter('to', 'To', 'date', {
-      default: dates.end,
+      default: '',
     }),
   ];
 }
 
 function endpointFilters(group, name, dates, inferred) {
-  const datesOnly = () => dateFilters(dates);
+  const datesOnly = () => dateFilters();
   const gatewayDates = () => [
     filter('address', 'Gateway', 'text', {
       required: true,
       description: 'Gateway key, entity key, base64 entity key, asset id, or key-to-asset key.',
     }),
-    ...dateFilters(dates),
+    ...dateFilters(),
   ];
   const hotspotDates = () => [
     filter('hotspot_key', 'Gateway key', 'text', {
       required: true,
     }),
-    ...dateFilters(dates),
+    ...dateFilters(),
   ];
   const topLimit = () => filter('limit', 'Top N', 'select', {
     default: '10',
@@ -861,7 +865,7 @@ function endpointFilters(group, name, dates, inferred) {
       includeEmpty: true,
       emptyLabel: 'Select OUI',
     }),
-    ...dateFilters(dates),
+    ...dateFilters(),
   ];
 
   if (group === 'delegation') {
@@ -1159,6 +1163,110 @@ function renderParametersDocCard(item) {
   );
 }
 
+const DATE_RANGE_PAIRS = [
+  ['from', 'to'],
+  ['start_date', 'end_date'],
+];
+
+function isDateRangePair(a, b) {
+  if (!a || !b || a.type !== 'date' || b.type !== 'date') return false;
+  return DATE_RANGE_PAIRS.some(([startName, endName]) => a.name === startName && b.name === endName);
+}
+
+const DATE_RANGE_CAL_ICON =
+  '<svg class="date-range-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>';
+
+function renderDateRangeFilter(startF, endF, itemId) {
+  const dateMode = startF.date_mode || endF.date_mode;
+  const isInactiveDateMode = dateMode && dateMode !== 'month';
+  const disabledAttr = isInactiveDateMode ? ' data-disabled="1"' : '';
+  const dateModeAttrs = dateMode
+    ? ` data-date-mode="${esc(dateMode)}"${isInactiveDateMode ? ' hidden' : ''}`
+    : '';
+  const startVal = esc(startF.default || '');
+  const endVal = esc(endF.default || '');
+  const presets = [
+    ['last-week', 'Last week'],
+    ['last-30', 'Last 30 days'],
+    ['this-week', 'This week'],
+    ['this-month', 'This month'],
+  ]
+    .map(
+      ([id, label]) =>
+        `<button type="button" class="date-range-preset" data-range-preset="${id}">${esc(label)}</button>`
+    )
+    .join('');
+  return `<div class="filter-row filter-row-span-2 date-range-filter-row" data-filter-type="date-range"${dateModeAttrs}>
+    <div class="date-range-picker"${disabledAttr} id="dr-${esc(itemId)}">
+      <div class="date-range-top">
+        <div class="date-range-fields">
+          <div class="date-range-field">
+            <span class="date-range-field-label">Start day</span>
+            <div class="date-range-input-wrap">
+              ${DATE_RANGE_CAL_ICON}
+              <input type="text" class="date-range-display active" id="dr-${esc(itemId)}-start" data-range-part="start-input" data-name="${esc(startF.name)}" value="${startVal}" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+          </div>
+          <span class="date-range-field-arrow" aria-hidden="true">→</span>
+          <div class="date-range-field">
+            <span class="date-range-field-label">End day</span>
+            <div class="date-range-input-wrap">
+              ${DATE_RANGE_CAL_ICON}
+              <input type="text" class="date-range-display" data-range-part="end-input" data-name="${esc(endF.name)}" value="${endVal}" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+          </div>
+        </div>
+        <div class="date-range-presets-row">
+          <div class="date-range-presets">${presets}</div>
+          <span class="date-range-max-note">Max 30 days</span>
+        </div>
+      </div>
+      <div class="date-range-calendar">
+        <div class="date-range-calendar-bar">
+          <span class="date-range-summary" data-range-part="range-summary"></span>
+          <div class="date-range-month-nav">
+            <button type="button" data-range-part="prev-month" aria-label="Previous month">‹</button>
+            <button type="button" data-range-part="next-month" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <span class="date-range-hint" data-range-part="range-hint" hidden></span>
+        <div class="date-range-months">
+          <div class="date-range-month-pane">
+            <div class="date-range-month-title" data-range-part="month-label-0"></div>
+            <div class="date-range-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="date-range-grid" data-range-part="grid-0"></div>
+          </div>
+          <div class="date-range-month-pane">
+            <div class="date-range-month-title" data-range-part="month-label-1"></div>
+            <div class="date-range-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="date-range-grid" data-range-part="grid-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderFiltersForPanel(filters, itemId) {
+  const parts = [];
+  for (let i = 0; i < filters.length; ) {
+    const f = filters[i];
+    const next = filters[i + 1];
+    if (isDateRangePair(f, next)) {
+      parts.push(renderDateRangeFilter(f, next, itemId));
+      i += 2;
+    } else {
+      parts.push(renderFilter(f, itemId));
+      i += 1;
+    }
+  }
+  return parts.join('');
+}
+
 function renderFilter(f, itemId) {
   const fid = `f-${itemId}-${f.name}`;
   let input = '';
@@ -1254,7 +1362,7 @@ function renderPanel(item, isFirst) {
   const filtersHtml = item.filters.length
     ? `<div class="section-card params-card">
         <div class="section-card-head">Request</div>
-        <div class="section-card-body"><div class="filter-grid">${item.filters.map((f) => renderFilter(f, item.id)).join('')}</div></div>
+        <div class="section-card-body"><div class="filter-grid">${renderFiltersForPanel(item.filters, item.id)}</div></div>
       </div>`
     : '';
 
@@ -1338,6 +1446,8 @@ function runtimeScript(dates) {
     const DEFAULT_FROM = ${JSON.stringify(dates.start)};
     const DEFAULT_TO = ${JSON.stringify(dates.end)};
     const STORED_MAKERS = [];
+
+${DATE_RANGE_PICKER_RUNTIME}
 
     (function initSidebarToggle() {
       var shell = document.querySelector(".shell");
@@ -1930,7 +2040,7 @@ const SAMPLE_VIEW_STYLES = `
     }
     .nav-api:hover { background: var(--surface); }
     .sidebar-search input:focus,
-    .filter-row input:focus,
+    .filter-row input:not(.date-range-display):focus,
     .filter-row select:focus {
       box-shadow: none; border-color: var(--border-hover);
     }

@@ -3,4 +3,4 @@
 #
 #   false → dev on :8137 only (default)
 #   true  → dev on :8137 + commit/push state_of_solana → Vercel prod
-deploy on vercel: false
+deploy on vercel: true
