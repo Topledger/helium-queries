@@ -70,6 +70,7 @@
     }
     .shell.sidebar-collapsed .sidebar-search-inner { display: none; }
     .shell.sidebar-collapsed .sidebar-scroll { display: none; }
+    .shell.sidebar-collapsed .sidebar-footer { display: none; }
     .shell.sidebar-collapsed .sidebar-search {
       padding: 10px 0; border-bottom: 1px solid var(--border);
     }
@@ -101,9 +102,21 @@
     .sidebar-scroll {
       flex: 1; min-height: 0;
       overflow-y: auto; overflow-x: hidden;
-      padding: 4px 0 20px;
+      padding: 4px 0 12px;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
+    }
+    .sidebar-footer {
+      flex-shrink: 0;
+      padding: 8px 14px 12px;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-copyright {
+      margin: 0;
+      font-size: 0.58rem;
+      line-height: 1.35;
+      color: rgba(176, 176, 177, 0.42);
+      letter-spacing: 0.02em;
     }
     .nav-group-label { display: none; }
     .nav-tag {
@@ -907,7 +920,7 @@
         </a>
       </div>
       <div class="header-main">
-        <div class="header-meta"><span id="header-api-base"></span> · 35 endpoints</div>
+        <div class="header-meta">35 endpoints</div>
       </div>
     </header>
     <div class="layout">
@@ -955,6 +968,9 @@
         <span class="nav-tag-count">6</span>
       </summary>
       <div class="nav-tag-list"><button class="nav-api" data-panel="ep-delegation-active_stake" data-tag="delegation" data-search="Active Stake /api/helium/delegation/active_stake" type="button">Active Stake</button><button class="nav-api" data-panel="ep-delegation-active_stake_by_dao" data-tag="delegation" data-search="Active Stake By DAO /api/helium/delegation/active_stake_by_dao" type="button">Active Stake By DAO</button><button class="nav-api" data-panel="ep-delegation-wallet_positions" data-tag="delegation" data-search="Wallet Positions /api/helium/delegation/wallet_positions" type="button">Wallet Positions</button><button class="nav-api" data-panel="ep-delegation-delegated_positions" data-tag="delegation" data-search="Delegated Positions /api/helium/delegation/delegated_positions" type="button">Delegated Positions</button><button class="nav-api" data-panel="ep-delegation-wallet_proxies" data-tag="delegation" data-search="Wallet Proxies /api/helium/delegation/wallet_proxies" type="button">Wallet Proxies</button><button class="nav-api" data-panel="ep-delegation-open_positions" data-tag="delegation" data-search="Open Delegations /api/helium/delegation/open_positions" type="button">Open Delegations</button></div></details>
+        </div>
+        <div class="sidebar-footer">
+          <p class="sidebar-copyright">© 2026 Top Ledger. All rights reserved.</p>
         </div>
       </aside>
       <main class="main">
@@ -5655,7 +5671,34 @@
   </div>
   <script>
     const BASE = window.location.origin;
-    document.getElementById("header-api-base").textContent = BASE;
+    function catalogBasePath() {
+      var path = window.location.pathname.replace(/\/$/, "") || "/";
+      var marker = "/helium-apis";
+      var idx = path.indexOf(marker);
+      if (idx >= 0) return path.slice(0, idx + marker.length);
+      if (path === "/") return "/helium-apis";
+      return path;
+    }
+    function panelIdFromRoute() {
+      var base = catalogBasePath();
+      var path = window.location.pathname.replace(/\/$/, "");
+      if (path.length <= base.length) return null;
+      var rest = decodeURIComponent(path.slice(base.length).replace(/^\//, ""));
+      var slash = rest.indexOf("/");
+      if (slash < 0) return null;
+      var group = rest.slice(0, slash);
+      var name = rest.slice(slash + 1).replace(/\/$/, "");
+      if (!group || !name) return null;
+      return "ep-" + group + "-" + name;
+    }
+    function routePathForPanelId(id) {
+      var raw = String(id || "").replace(/^ep-/, "");
+      var dash = raw.indexOf("-");
+      if (dash < 0) return catalogBasePath();
+      var group = raw.slice(0, dash);
+      var name = raw.slice(dash + 1);
+      return catalogBasePath() + "/" + encodeURIComponent(group) + "/" + encodeURIComponent(name);
+    }
     const DEFAULT_FROM = "2026-09-01";
     const DEFAULT_TO = "2026-09-21";
     const STORED_MAKERS = [];
@@ -6249,17 +6292,48 @@
       });
     }
 
-    function showPanel(id) {
+    function showPanel(id, opts) {
+      opts = opts || {};
+      if (!id) return;
       panels.forEach((p) => p.classList.toggle("active", p.id === "panel-" + id));
       navItems.forEach((n) => n.classList.toggle("active", n.dataset.panel === id));
       const btn = document.querySelector('.sidebar .nav-api[data-panel="' + id + '"]');
       const tag = btn && btn.closest(".nav-tag");
       if (tag) tag.open = true;
+      if (!opts.fromHistory) {
+        var path = routePathForPanelId(id);
+        if (window.location.pathname !== path) {
+          history.pushState({ panel: id }, "", path);
+        }
+      }
     }
 
     navItems.forEach((btn) => {
       btn.addEventListener("click", () => showPanel(btn.dataset.panel));
     });
+
+    window.addEventListener("popstate", function() {
+      var id = panelIdFromRoute() || (history.state && history.state.panel);
+      if (id && document.getElementById("panel-" + id)) {
+        showPanel(id, { fromHistory: true });
+      }
+    });
+
+    (function initCatalogRoute() {
+      var routed = panelIdFromRoute();
+      if (routed && document.getElementById("panel-" + routed)) {
+        showPanel(routed, { fromHistory: true });
+        return;
+      }
+      var active = document.querySelector(".nav-api.active");
+      if (active && active.dataset.panel) {
+        history.replaceState(
+          { panel: active.dataset.panel },
+          "",
+          routePathForPanelId(active.dataset.panel)
+        );
+      }
+    })();
 
     document.getElementById("nav-search").addEventListener("input", (e) => {
       const q = e.target.value.trim().toLowerCase();

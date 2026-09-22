@@ -12,6 +12,7 @@ process.chdir(REPO_ROOT);
 require('dotenv').config({ path: path.join(REPO_ROOT, '.env') });
 
 const { buildHeliumApisCatalogHtml } = require('./catalog/generate-queries-index.js');
+const { buildHeliumApisLandingHtml } = require('./catalog/build-landing-page.js');
 const { paramsFromRequest } = require('./lib/params-from-request.js');
 const { runHeliumQuery, sanitizeQueryError } = require('./lib/run-query.js');
 
@@ -70,7 +71,34 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === 'GET' && (url.pathname === '/helium-apis' || url.pathname === '/')) {
+  const catalogPath =
+    url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname;
+  const isLandingPage = catalogPath === '/helium-apis' || catalogPath === '/';
+  const isCatalogPage = /^\/helium-apis\/[^/]+\/[^/]+$/.test(catalogPath);
+
+  if (req.method === 'GET' && isLandingPage) {
+    try {
+      const origin = `${url.protocol}//${url.host}`;
+      const html = buildHeliumApisLandingHtml({ baseUrl: origin });
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store, must-revalidate',
+      });
+      res.end(html);
+      return;
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(err.message || 'Landing build failed');
+      return;
+    }
+  }
+
+  if (req.method === 'GET' && isCatalogPage) {
+    if (url.pathname !== catalogPath) {
+      res.writeHead(301, { Location: catalogPath + (url.search || '') });
+      res.end();
+      return;
+    }
     try {
       const origin = `${url.protocol}//${url.host}`;
       const html = buildHeliumApisCatalogHtml({ baseUrl: origin });

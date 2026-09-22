@@ -1442,7 +1442,34 @@ function extractStyles() {
 
 function runtimeScript(dates) {
   return `    const BASE = window.location.origin;
-    document.getElementById("header-api-base").textContent = BASE;
+    function catalogBasePath() {
+      var path = window.location.pathname.replace(/\\/$/, "") || "/";
+      var marker = "/helium-apis";
+      var idx = path.indexOf(marker);
+      if (idx >= 0) return path.slice(0, idx + marker.length);
+      if (path === "/") return "/helium-apis";
+      return path;
+    }
+    function panelIdFromRoute() {
+      var base = catalogBasePath();
+      var path = window.location.pathname.replace(/\\/$/, "");
+      if (path.length <= base.length) return null;
+      var rest = decodeURIComponent(path.slice(base.length).replace(/^\\//, ""));
+      var slash = rest.indexOf("/");
+      if (slash < 0) return null;
+      var group = rest.slice(0, slash);
+      var name = rest.slice(slash + 1).replace(/\\/$/, "");
+      if (!group || !name) return null;
+      return "ep-" + group + "-" + name;
+    }
+    function routePathForPanelId(id) {
+      var raw = String(id || "").replace(/^ep-/, "");
+      var dash = raw.indexOf("-");
+      if (dash < 0) return catalogBasePath();
+      var group = raw.slice(0, dash);
+      var name = raw.slice(dash + 1);
+      return catalogBasePath() + "/" + encodeURIComponent(group) + "/" + encodeURIComponent(name);
+    }
     const DEFAULT_FROM = ${JSON.stringify(dates.start)};
     const DEFAULT_TO = ${JSON.stringify(dates.end)};
     const STORED_MAKERS = [];
@@ -1525,17 +1552,48 @@ ${DATE_RANGE_PICKER_RUNTIME}
       });
     }
 
-    function showPanel(id) {
+    function showPanel(id, opts) {
+      opts = opts || {};
+      if (!id) return;
       panels.forEach((p) => p.classList.toggle("active", p.id === "panel-" + id));
       navItems.forEach((n) => n.classList.toggle("active", n.dataset.panel === id));
       const btn = document.querySelector('.sidebar .nav-api[data-panel="' + id + '"]');
       const tag = btn && btn.closest(".nav-tag");
       if (tag) tag.open = true;
+      if (!opts.fromHistory) {
+        var path = routePathForPanelId(id);
+        if (window.location.pathname !== path) {
+          history.pushState({ panel: id }, "", path);
+        }
+      }
     }
 
     navItems.forEach((btn) => {
       btn.addEventListener("click", () => showPanel(btn.dataset.panel));
     });
+
+    window.addEventListener("popstate", function() {
+      var id = panelIdFromRoute() || (history.state && history.state.panel);
+      if (id && document.getElementById("panel-" + id)) {
+        showPanel(id, { fromHistory: true });
+      }
+    });
+
+    (function initCatalogRoute() {
+      var routed = panelIdFromRoute();
+      if (routed && document.getElementById("panel-" + routed)) {
+        showPanel(routed, { fromHistory: true });
+        return;
+      }
+      var active = document.querySelector(".nav-api.active");
+      if (active && active.dataset.panel) {
+        history.replaceState(
+          { panel: active.dataset.panel },
+          "",
+          routePathForPanelId(active.dataset.panel)
+        );
+      }
+    })();
 
     document.getElementById("nav-search").addEventListener("input", (e) => {
       const q = e.target.value.trim().toLowerCase();
@@ -2213,12 +2271,12 @@ function buildHeliumApisCatalogHtml(options = {}) {
   <div class="shell">
     <header class="header">
       <div class="header-brand">
-        <a class="logo" href="https://research.topledger.xyz/" target="_blank" rel="noopener">
+        <a class="logo" href="/helium-apis" title="Helium APIs home">
           <img src="https://topledger.xyz/assets/images/logo/topledger-full.svg?imwidth=384" alt="Top Ledger Research" width="160" height="26" />
         </a>
       </div>
       <div class="header-main">
-        <div class="header-meta"><span id="header-api-base"></span> · ${endpoints.length} endpoints</div>
+        <div class="header-meta">${endpoints.length} endpoints</div>
       </div>
     </header>
     <div class="layout">
@@ -2237,6 +2295,9 @@ function buildHeliumApisCatalogHtml(options = {}) {
         <div class="sidebar-scroll">
           ${navHtml}
         </div>
+        <div class="sidebar-footer">
+          <p class="sidebar-copyright">© ${new Date().getFullYear()} Top Ledger. All rights reserved.</p>
+        </div>
       </aside>
       <main class="main">
         ${panelsHtml}
@@ -2254,15 +2315,21 @@ ${runtimeScript(dates)}
 function writeCatalogFiles(html) {
   const formatted = html.replace(/[ \t]+$/gm, '');
   fs.writeFileSync(OUT, formatted);
+  const { buildHeliumApisLandingHtml } = require('./build-landing-page.js');
+  const landing = buildHeliumApisLandingHtml();
+  fs.writeFileSync(path.join(REPO_ROOT, 'landing.html'), landing.replace(/[ \t]+$/gm, ''));
   const monorepo = process.env.HELIUM_MONOREPO_ROOT;
   if (monorepo) {
     const root = path.resolve(monorepo);
     const outPublic = path.join(root, 'public', 'queries', 'index.html');
     const outHelium = path.join(root, 'public', 'helium-apis', 'index.html');
+    const outHeliumCatalog = path.join(root, 'public', 'helium-apis', 'catalog', 'index.html');
     fs.mkdirSync(path.dirname(outPublic), { recursive: true });
     fs.writeFileSync(outPublic, formatted);
     fs.mkdirSync(path.dirname(outHelium), { recursive: true });
-    fs.writeFileSync(outHelium, formatted);
+    fs.writeFileSync(outHelium, landing.replace(/[ \t]+$/gm, ''));
+    fs.mkdirSync(path.dirname(outHeliumCatalog), { recursive: true });
+    fs.writeFileSync(outHeliumCatalog, formatted);
   }
 }
 
@@ -2282,7 +2349,13 @@ function main() {
   }
 }
 
-module.exports = { buildHeliumApisCatalogHtml, writeCatalogFiles };
+module.exports = {
+  buildHeliumApisCatalogHtml,
+  writeCatalogFiles,
+  collectEndpoints,
+  groupLabel,
+  esc,
+};
 
 if (require.main === module) {
   main();
