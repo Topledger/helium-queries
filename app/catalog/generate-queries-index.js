@@ -1306,8 +1306,10 @@ function renderPanel(item, isFirst) {
 
 function renderNav(groups, firstId) {
   let html = '';
-  for (const group of groups) {
-    html += `<details class="nav-tag" data-tag="${esc(group.id)}" data-search="${esc(group.label)}" open>
+  for (let i = 0; i < groups.length; i++) {
+    const group = groups[i];
+    const openAttr = i === 0 ? ' open' : '';
+    html += `<details class="nav-tag" data-tag="${esc(group.id)}" data-search="${esc(group.label)}"${openAttr}>
       <summary>
         <svg class="nav-tag-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
         <span class="nav-tag-name">${esc(group.label)}</span>
