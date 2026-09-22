@@ -225,8 +225,9 @@
 
     function setActiveField(field) {
       activeField = field;
-      if (startInput) startInput.classList.toggle("active", field === "start");
-      if (endInput) endInput.classList.toggle("active", field === "end");
+      var showActive = root.classList.contains("is-calendar-open");
+      if (startInput) startInput.classList.toggle("active", showActive && field === "start");
+      if (endInput) endInput.classList.toggle("active", showActive && field === "end");
     }
 
     function commitTypedField(field) {
@@ -329,14 +330,16 @@
 
     function openCalendar(field) {
       if (field === "end" && !startDate) field = "start";
-      setActiveField(field);
       alignViewToSelection(field);
       root.classList.add("is-calendar-open");
+      setActiveField(field);
       renderCalendar();
     }
 
     function closeCalendar() {
       root.classList.remove("is-calendar-open");
+      if (startInput) startInput.classList.remove("active");
+      if (endInput) endInput.classList.remove("active");
     }
 
     function sameDay(a, b) {
@@ -503,7 +506,6 @@
       });
     });
 
-    setActiveField(activeField);
     syncInputs();
   });
 })();

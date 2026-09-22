@@ -336,51 +336,42 @@
       gap: 10px;
       align-items: end;
     }
+    .date-range-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
     .date-range-field-label {
       display: block;
-      font-size: 0.68rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      margin: 0;
       color: var(--text-muted);
-      margin-bottom: 6px;
+      letter-spacing: 0.01em;
     }
     .date-range-input-wrap {
       position: relative;
-      display: flex;
-      align-items: center;
       width: 100%;
     }
     .date-range-input-wrap .date-range-cal-icon {
       position: absolute;
-      left: 11px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
       pointer-events: none;
-      z-index: 1;
     }
     .filter-row .date-range-input-wrap .date-range-display {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 10px 12px 10px 40px !important;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-      font: inherit;
-      font-size: 0.82rem;
-      min-height: 42px;
-      outline: none;
-      max-width: none;
+      padding-left: 36px !important;
     }
-    .filter-row .date-range-input-wrap .date-range-display::placeholder { color: var(--text-muted); }
-    .filter-row .date-range-input-wrap .date-range-display.active,
-    .filter-row .date-range-input-wrap .date-range-display:focus {
-      border-color: rgba(167,139,250,0.65);
-      box-shadow: 0 0 0 2px var(--purple-soft);
-    }
-    .filter-row .date-range-input-wrap .date-range-display:hover:not(:focus) {
-      border-color: var(--border-hover);
-    }
-    .filter-row .date-range-input-wrap .date-range-display.invalid {
+    .filter-row .date-range-display.invalid {
       border-color: rgba(252, 211, 77, 0.55);
+    }
+    .date-range-picker.is-calendar-open .date-range-display.active {
+      border-color: var(--border-hover);
     }
     .date-range-field-arrow {
       color: var(--text-muted);

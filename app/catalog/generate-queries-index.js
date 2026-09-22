@@ -1204,7 +1204,7 @@ function renderDateRangeFilter(startF, endF, itemId) {
             <span class="date-range-field-label">Start day</span>
             <div class="date-range-input-wrap">
               ${DATE_RANGE_CAL_ICON}
-              <input type="text" class="date-range-display active" id="dr-${esc(itemId)}-start" data-range-part="start-input" data-name="${esc(startF.name)}" value="${startVal}" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+              <input type="text" class="date-range-display" id="dr-${esc(itemId)}-start" data-range-part="start-input" data-name="${esc(startF.name)}" value="${startVal}" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
             </div>
           </div>
           <span class="date-range-field-arrow" aria-hidden="true">→</span>
@@ -2040,7 +2040,7 @@ const SAMPLE_VIEW_STYLES = `
     }
     .nav-api:hover { background: var(--surface); }
     .sidebar-search input:focus,
-    .filter-row input:not(.date-range-display):focus,
+    .filter-row input:focus,
     .filter-row select:focus {
       box-shadow: none; border-color: var(--border-hover);
     }
