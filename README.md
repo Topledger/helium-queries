@@ -41,7 +41,7 @@ The monorepo syncs this repo into `queries/`:
 ./scripts/sync-helium-queries-from-github.sh
 ```
 
-Next.js serves `/helium-apis` and `/api/helium/*` using files under `queries/app/` and `queries/pipeline/`.
+Next.js serves `/helium-apis` (landing), `/helium-apis/{group}/{query}` (catalog), and `/api/helium/*` using `queries/app/` (including `helium-apis-pages.js`) and `queries/pipeline/`.
 
 ## GitHub webhook
 
