@@ -1,14 +1,10 @@
 -- query_name: HOTSPOT_ONBOARD_CADENCE
--- New issue / onboard events per day, week, or month from Entity Manager.
+-- New issue / onboard events per day from Entity Manager.
 SELECT
-    CASE
-        WHEN '{bucket}' = 'total'
-            THEN '{start_date}'
-        ELSE date_format(
-                date_trunc('{bucket}', CAST(block_date AS date)),
-                '%Y-%m-%dT%H:%i:%sZ'
-             )
-    END                                                                     AS "date",
+    date_format(
+        date_trunc('day', CAST(block_date AS date)),
+        '%Y-%m-%dT%H:%i:%sZ'
+    )                                                                       AS "date",
     count(DISTINCT input_accounts.keyToAsset)                               AS "hotspotCount",
     count(DISTINCT CASE
         WHEN instruction_type IN ('GenesisIssueHotspotV0', 'IssueDataOnlyEntityV0')

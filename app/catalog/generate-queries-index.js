@@ -136,7 +136,7 @@ const ENDPOINT_DESCRIPTIONS = {
   'hotspot/hotspot_metrics':
     'Returns the total number of gateway makers and issued gateways.',
   'hotspot/hotspot_onboard_cadence':
-    'Shows how many gateways were issued or onboarded to IoT and Mobile in each time period.',
+    'Shows how many gateways were issued or onboarded to IoT and Mobile each day.',
   'hotspot/hotspot_network_mix':
     'Shows the current gateway count split between the IoT and Mobile networks.',
   'hotspot/hotspot_maker_growth':
@@ -903,13 +903,7 @@ function endpointFilters(group, name, dates, inferred) {
         : 'All makers',
     });
     if (name === 'hotspot_onboard_cadence') {
-      return [
-        ...datesOnly(),
-        filter('bucket', 'Bucket', 'select', {
-          default: 'day',
-          options: ['day', 'week', 'month', 'total'],
-        }),
-      ];
+      return datesOnly();
     }
     const byName = {
       hotspot_by_maker: [makerSelect],
