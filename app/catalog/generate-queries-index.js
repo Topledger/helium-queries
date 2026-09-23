@@ -1732,21 +1732,6 @@ ${DATE_RANGE_PICKER_RUNTIME}
       });
     }
 
-    function formatColumnLabel(key) {
-      return String(key)
-        .replace(/_/g, " ")
-        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-        .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
-        .trim()
-        .split(/\s+/)
-        .map(function(w) {
-          var lower = w.toLowerCase();
-          if (lower === "hnt" || lower === "iot" || lower === "oui" || lower === "dao") return w.toUpperCase();
-          return w.charAt(0).toUpperCase() + w.slice(1);
-        })
-        .join(" ");
-    }
-
     function buildSampleTableHtml(rows) {
       if (!rows.length) return '<p class="sample-table-empty">No rows match.</p>';
       const keys = [];
@@ -1758,7 +1743,7 @@ ${DATE_RANGE_PICKER_RUNTIME}
         });
       });
       if (!keys.length) return '<p class="sample-table-empty">No columns in rows.</p>';
-      const head = keys.map(function(k) { return "<th>" + escHtml(formatColumnLabel(k)) + "</th>"; }).join("");
+      const head = keys.map(function(k) { return "<th>" + escHtml(k) + "</th>"; }).join("");
       const body = rows.map(function(row) {
         const cells = keys.map(function(k) {
           const v = row[k];
@@ -2175,7 +2160,7 @@ const SAMPLE_VIEW_STYLES = `
       vertical-align: middle; white-space: nowrap;
     }
     .sample-table th {
-      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.01em;
+      font-family: var(--mono); font-size: 0.72rem; font-weight: 500; letter-spacing: 0;
       color: var(--text-secondary); position: sticky; top: 0; background: var(--surface-2); z-index: 1;
     }
     .sample-table td { font-family: var(--mono); color: var(--text-secondary); }
