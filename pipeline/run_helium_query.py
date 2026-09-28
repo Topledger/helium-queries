@@ -125,7 +125,7 @@ def main() -> int:
 
     try:
         template = load_sql(group, name)
-        sql = bind_sql(template, params)
+        sql = bind_sql(template, params, group=group)
         df = execute_query(sql)
         rows = df_to_records(df)
         print(

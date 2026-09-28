@@ -5,7 +5,6 @@ SELECT
         date_trunc('day', CAST(block_date AS date)),
         '%Y-%m-%dT%H:%i:%sZ'
     )                                                                       AS "date",
-    count(DISTINCT input_accounts.keyToAsset)                               AS "hotspotCount",
     count(DISTINCT CASE
         WHEN instruction_type IN ('GenesisIssueHotspotV0', 'IssueDataOnlyEntityV0')
         THEN input_accounts.keyToAsset

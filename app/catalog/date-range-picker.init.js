@@ -72,22 +72,22 @@
     return Math.floor((startOfDay(end) - startOfDay(start)) / 86400000) + 1;
   }
 
-  function maxEndForStart(start) {
+  function maxEndForStart(start, cap) {
     var maxEnd = addDays(start, MAX_RANGE_DAYS - 1);
-    var cap = todayLocal();
-    return maxEnd > cap ? cap : maxEnd;
+    var limit = cap || todayLocal();
+    return maxEnd > limit ? limit : maxEnd;
   }
 
-  function normalizeRange(nextStart, nextEnd) {
-    var cap = todayLocal();
-    if (nextStart > cap) nextStart = cap;
-    if (nextEnd > cap) nextEnd = cap;
+  function normalizeRange(nextStart, nextEnd, cap) {
+    var limit = cap || todayLocal();
+    if (nextStart > limit) nextStart = limit;
+    if (nextEnd > limit) nextEnd = limit;
     if (nextEnd < nextStart) {
       var tmp = nextStart;
       nextStart = nextEnd;
       nextEnd = tmp;
     }
-    var maxEnd = maxEndForStart(nextStart);
+    var maxEnd = maxEndForStart(nextStart, limit);
     var adjusted = false;
     if (nextEnd > maxEnd) {
       nextEnd = maxEnd;
@@ -106,9 +106,9 @@
     return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
   }
 
-  function buildPresetRange(kind) {
-    var today = todayLocal();
-    var yesterday = addDays(today, -1);
+  function buildPresetRange(kind, cap) {
+    var today = cap ? startOfDay(cap) : todayLocal();
+    var yesterday = cap ? today : addDays(today, -1);
     var start;
     var end;
     if (kind === "last-week") {
@@ -139,12 +139,24 @@
     } else {
       return null;
     }
-    return normalizeRange(start, end);
+    return normalizeRange(start, end, cap || null);
   }
 
   document.querySelectorAll(".date-range-picker").forEach(function (root) {
     if (root.dataset.initialized === "1") return;
     root.dataset.initialized = "1";
+
+    var maxDate = parseYmd(root.getAttribute("data-max-date"));
+    function rangeCap() {
+      if (maxDate && maxDate < todayLocal()) return maxDate;
+      return null;
+    }
+    function allowedCap() {
+      return rangeCap() || todayLocal();
+    }
+    function maxDateMessage() {
+      return "Dates after " + formatYmd(maxDate) + " are not available";
+    }
 
     var startInput = root.querySelector("[data-range-part=start-input]");
     var endInput = root.querySelector("[data-range-part=end-input]");
@@ -166,7 +178,7 @@
     var startDate = parseDateInput(startInput && startInput.value);
     var endDate = parseDateInput(endInput && endInput.value);
     if (startDate && endDate) {
-      var initial = normalizeRange(startDate, endDate);
+      var initial = normalizeRange(startDate, endDate, allowedCap());
       startDate = initial.start;
       endDate = initial.end;
     } else if (startDate && !endDate) {
@@ -179,7 +191,8 @@
       endDate = null;
     }
 
-    var viewMonth = new Date(todayLocal().getFullYear(), todayLocal().getMonth(), 1);
+    var viewAnchor = startDate || rangeCap() || todayLocal();
+    var viewMonth = new Date(viewAnchor.getFullYear(), viewAnchor.getMonth(), 1);
     var activeField = startDate ? "end" : "start";
     var hintTimer = null;
 
@@ -252,7 +265,12 @@
         showHint("Use YYYY-MM-DD, 9/5/2026, or Sep 5, 2026");
         return;
       }
-      var cap = todayLocal();
+      if (maxDate && parsed > maxDate) {
+        showHint(maxDateMessage());
+        syncInputs();
+        return;
+      }
+      var cap = allowedCap();
       if (parsed > cap) parsed = cap;
 
       if (field === "start") {
@@ -315,7 +333,7 @@
 
     function alignViewToSelection(field) {
       var anchor = field === "start" ? startDate : endDate;
-      if (!anchor) anchor = todayLocal();
+      if (!anchor) anchor = rangeCap() || todayLocal();
       viewMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
       if (field === "end" && startDate && endDate && countDays(startDate, endDate) > 1) {
         var endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
@@ -347,12 +365,13 @@
     }
 
     function dayDisabled(cellDate) {
-      var cap = todayLocal();
+      if (maxDate && cellDate > maxDate) return maxDateMessage();
+      var cap = allowedCap();
       if (cellDate > cap) return "Future dates are not allowed";
       if (activeField === "end") {
         if (!startDate) return "Pick a start date first";
         if (cellDate < startDate) return "End must be on or after start";
-        if (cellDate > maxEndForStart(startDate)) {
+        if (cellDate > maxEndForStart(startDate, cap)) {
           return "Queries support at most " + MAX_RANGE_DAYS + " days — pick an earlier end date";
         }
       }
@@ -361,7 +380,7 @@
 
     function isInSelectableWindow(cellDate) {
       if (!startDate || endDate) return false;
-      return cellDate > startDate && cellDate <= maxEndForStart(startDate);
+      return cellDate > startDate && cellDate <= maxEndForStart(startDate, allowedCap());
     }
 
     function dayClasses(cellDate, monthAnchor) {
@@ -380,7 +399,7 @@
     function alignViewToStartWindow() {
       if (!startDate) return;
       viewMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-      var windowEnd = maxEndForStart(startDate);
+      var windowEnd = maxEndForStart(startDate, allowedCap());
       var endMonth = new Date(windowEnd.getFullYear(), windowEnd.getMonth(), 1);
       if (endMonth.getTime() > addMonths(viewMonth, 1).getTime()) {
         viewMonth = addMonths(endMonth, -1);
@@ -388,7 +407,11 @@
     }
 
     function applyPickedDate(picked) {
-      var cap = todayLocal();
+      if (maxDate && picked > maxDate) {
+        showHint(maxDateMessage());
+        return;
+      }
+      var cap = allowedCap();
       if (picked > cap) picked = cap;
 
       if (!startDate || activeField === "start") {
@@ -456,6 +479,14 @@
     function renderCalendar() {
       renderMonthGrid(grids[0], viewMonth, monthLabels[0]);
       renderMonthGrid(grids[1], addMonths(viewMonth, 1), monthLabels[1]);
+      if (nextBtn) {
+        if (maxDate) {
+          var maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+          nextBtn.disabled = addMonths(viewMonth, 1).getTime() >= maxMonth.getTime();
+        } else {
+          nextBtn.disabled = false;
+        }
+      }
     }
 
     bindDateInput(startInput, "start");
@@ -488,6 +519,7 @@
       });
     nextBtn &&
       nextBtn.addEventListener("click", function () {
+        if (nextBtn.disabled) return;
         viewMonth = addMonths(viewMonth, 1);
         renderCalendar();
       });
@@ -495,7 +527,7 @@
     root.querySelectorAll("[data-range-preset]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
-        var range = buildPresetRange(btn.dataset.rangePreset);
+        var range = buildPresetRange(btn.dataset.rangePreset, rangeCap());
         if (!range) return;
         startDate = range.start;
         endDate = range.end;

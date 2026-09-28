@@ -9,6 +9,8 @@ from datetime import date, datetime, timedelta
 from typing import Any
 
 _PLACEHOLDER_RE = re.compile(r"\{([a-z_]+)\}")
+HELIUM_L1_MAX_DATE = date(2023, 4, 18)
+HELIUM_L1_DEFAULT_START = date(2023, 3, 20)
 
 
 def _escape(value: str) -> str:
@@ -34,7 +36,12 @@ def _parse_date(value: Any, name: str) -> date:
     return parsed
 
 
-def _date_window(raw: dict[str, Any]) -> tuple[str, str]:
+def _reject_after_l1_max(value: date, name: str) -> None:
+    if value > HELIUM_L1_MAX_DATE:
+        raise ValueError(f"{name} must be on or before 2023-04-18")
+
+
+def _date_window(raw: dict[str, Any], *, l1: bool = False) -> tuple[str, str]:
     raw_month = str(raw.get("month") or "").strip()
     raw_from = raw.get("from") or raw.get("start_date")
     raw_to = raw.get("to") or raw.get("end_date")
@@ -48,8 +55,13 @@ def _date_window(raw: dict[str, Any]) -> tuple[str, str]:
             raise ValueError("month must use YYYY-MM") from exc
         start = parsed.replace(day=1)
         end = parsed.replace(day=calendar.monthrange(parsed.year, parsed.month)[1])
-        yesterday = date.today() - timedelta(days=1)
-        end = min(end, yesterday)
+        if l1:
+            if start > HELIUM_L1_MAX_DATE:
+                raise ValueError("month must be on or before 2023-04")
+            end = min(end, HELIUM_L1_MAX_DATE)
+        else:
+            yesterday = date.today() - timedelta(days=1)
+            end = min(end, yesterday)
         if start > end:
             raise ValueError("month is entirely in the future")
     elif raw_from or raw_to:
@@ -57,10 +69,17 @@ def _date_window(raw: dict[str, Any]) -> tuple[str, str]:
             raise ValueError("Both from and to are required")
         start = _parse_date(raw_from, "from")
         end = _parse_date(raw_to, "to")
+        if l1:
+            _reject_after_l1_max(start, "from")
+            _reject_after_l1_max(end, "to")
     else:
-        yesterday = date.today() - timedelta(days=1)
-        start = yesterday.replace(day=1)
-        end = yesterday
+        if l1:
+            start = HELIUM_L1_DEFAULT_START
+            end = HELIUM_L1_MAX_DATE
+        else:
+            yesterday = date.today() - timedelta(days=1)
+            start = yesterday.replace(day=1)
+            end = yesterday
 
     if end < start:
         raise ValueError("to must be on or after from")
@@ -77,9 +96,9 @@ def _bool_param(value: Any) -> bool:
     return str(value or "").strip().lower() in {"1", "true", "yes"}
 
 
-def default_params(raw: dict[str, Any] | None) -> dict[str, Any]:
+def default_params(raw: dict[str, Any] | None, group: str | None = None) -> dict[str, Any]:
     raw = dict(raw or {})
-    start_date, end_date = _date_window(raw)
+    start_date, end_date = _date_window(raw, l1=group == "helium_l1_data")
     out: dict[str, Any] = {
         "start_date": start_date,
         "end_date": end_date,
@@ -87,6 +106,13 @@ def default_params(raw: dict[str, Any] | None) -> dict[str, Any]:
         "entity_key_b64": str(raw.get("entity_key_b64") or ""),
         "address": str(raw.get("address") or raw.get("hotspot_key") or ""),
         "bucket": str(raw.get("bucket") or "day"),
+        "l1_type": str(raw.get("l1_type") or "").strip(),
+        "l1_hash": str(raw.get("l1_hash") or raw.get("transaction_hash") or "").strip(),
+        "l1_block_height": (
+            int(raw.get("l1_block_height") or raw.get("block_height"))
+            if raw.get("l1_block_height") or raw.get("block_height")
+            else None
+        ),
         "offset": int(raw.get("offset") or 0),
         "limit": int(raw.get("limit") or raw.get("per_page") or 100),
         "oui_id": str(raw.get("oui_id") or raw.get("oui") or ""),
@@ -258,6 +284,22 @@ def _fragments(template: str, p: dict[str, Any]) -> dict[str, str]:
             f"AND name = '{_escape(p['maker'])}'" if p["maker"] else ""
         ),
         "type_filter": type_filter,
+        "l1_type_filter": (
+            f"AND type = '{_escape(p['l1_type'])}'" if p["l1_type"] else ""
+        ),
+        "l1_hash_filter": (
+            f"AND hash = '{_escape(p['l1_hash'])}'" if p["l1_hash"] else ""
+        ),
+        "l1_block_height_filter": (
+            f"AND height = {p['l1_block_height']}"
+            if p["l1_block_height"] is not None
+            else ""
+        ),
+        "l1_transaction_block_filter": (
+            f"AND block = {p['l1_block_height']}"
+            if p["l1_block_height"] is not None
+            else ""
+        ),
         "free_filter": free_filter,
         "region_filter": (
             f"AND cast(p.region AS varchar) = '{_escape(p['region'])}'"
@@ -289,8 +331,12 @@ def _fragments(template: str, p: dict[str, Any]) -> dict[str, str]:
     }
 
 
-def bind_sql(template: str, raw_params: dict[str, Any] | None = None) -> str:
-    p = default_params(raw_params)
+def bind_sql(
+    template: str,
+    raw_params: dict[str, Any] | None = None,
+    group: str | None = None,
+) -> str:
+    p = default_params(raw_params, group=group)
     if "{oui_id}" in template and not p["oui_id"]:
         raise ValueError("oui_id is required")
     if "{lookup_filter}" in template and not any(

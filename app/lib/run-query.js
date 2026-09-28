@@ -59,6 +59,13 @@ function proxyOrigin() {
   return raw ? raw.replace(/\/$/, '') : undefined;
 }
 
+function queryExists(group, name) {
+  if (!/^[a-z0-9_]+$/i.test(group) || !/^[a-z0-9_]+$/i.test(name)) {
+    return false;
+  }
+  return fs.existsSync(path.join(REPO_ROOT, 'sql', group, `${name}.sql`));
+}
+
 async function runHeliumQueryViaProxy(origin, group, name, params, signal) {
   const url = new URL(
     `${origin}/api/helium/${encodeURIComponent(group)}/${encodeURIComponent(name)}`
@@ -90,6 +97,12 @@ async function runHeliumQueryViaProxy(origin, group, name, params, signal) {
 
 async function runHeliumQuery(group, name, params = {}, options = {}) {
   const { signal } = options;
+  if (!queryExists(group, name)) {
+    return {
+      success: false,
+      error: `Query not found: ${group}/${name}`,
+    };
+  }
   const proxy = proxyOrigin();
   if (proxy) {
     return runHeliumQueryViaProxy(proxy, group, name, params, signal);

@@ -56,6 +56,7 @@ const GROUP_ORDER = [
   'mobile',
   'oui',
   'delegation',
+  'helium_l1_data',
 ];
 
 const ENDPOINT_ORDER = {
@@ -104,6 +105,11 @@ const ENDPOINT_ORDER = {
     'wallet_proxies',
     'open_positions',
   ],
+  helium_l1_data: [
+    'l1_blocks_daily',
+    'l1_activity_daily',
+    'l1_transactions_by_type',
+  ],
 };
 
 const ENDPOINT_TITLES = {
@@ -126,6 +132,9 @@ const ENDPOINT_TITLES = {
   'oui/oui_dc_usage': 'OUI Data Credit Burns',
   'oui/oui_packet_size_distribution': 'OUI Daily Packet Size Distribution',
   'delegation/open_positions': 'Open Delegations',
+  'helium_l1_data/l1_blocks_daily': 'L1 Daily Metrics',
+  'helium_l1_data/l1_activity_daily': 'L1 Network Activity',
+  'helium_l1_data/l1_transactions_by_type': 'L1 Transactions by Type',
 };
 
 const ENDPOINT_DESCRIPTIONS = {
@@ -203,6 +212,13 @@ const ENDPOINT_DESCRIPTIONS = {
     'Lists the latest vote-proxy assignments owned by or assigned to a wallet.',
   'delegation/open_positions':
     'Lists stake-position creation events, optionally filtered by authority, NFT mint, or subDAO.',
+
+  'helium_l1_data/l1_blocks_daily':
+    'Shows daily Helium L1 blocks, transactions, block time, PoC receipts, packet and Data Credit usage, and HNT rewards.',
+  'helium_l1_data/l1_activity_daily':
+    'Shows daily gateway adds, location asserts, hotspot transfers, HNT payments, and HNT burns.',
+  'helium_l1_data/l1_transactions_by_type':
+    'Shows how many Helium L1 transactions of each type were recorded each day.',
 };
 
 function readStoredOptions(name) {
@@ -238,6 +254,10 @@ const FRAGMENT_TO_PARAMS = {
   status_filter: ['status'],
   maker_filter: ['maker'],
   type_filter: ['packet_type'],
+  l1_type_filter: ['l1_type'],
+  l1_hash_filter: ['l1_hash'],
+  l1_block_height_filter: ['l1_block_height'],
+  l1_transaction_block_filter: ['l1_block_height'],
   free_filter: ['free'],
 };
 
@@ -262,6 +282,9 @@ const PARAM_DISPLAY_ORDER = [
   'maker',
   'status',
   'packet_type',
+  'l1_type',
+  'l1_hash',
+  'l1_block_height',
   'free',
   'offset',
   'limit',
@@ -291,6 +314,9 @@ const PARAM_META = {
   asset_id: { desc: '' },
   key_to_asset_key: { desc: '' },
   packet_type: { desc: '' },
+  l1_type: { desc: '' },
+  l1_hash: { desc: '' },
+  l1_block_height: { desc: '' },
   free: { desc: '' },
 };
 
@@ -364,6 +390,21 @@ const PARAM_METHOD_DOCS = {
   authority: { type: 'string', default: 'empty', desc: 'Position authority (alias: position_authority).' },
   status: { type: 'delegated | undelegated', default: 'empty', desc: 'Delegation status filter.' },
   maker: { type: 'string', default: 'empty', desc: 'Gateway maker name. Leave empty to include all makers.' },
+  l1_type: {
+    type: 'string',
+    default: 'empty (all)',
+    desc: 'L1 transaction type, such as payment_v2 or poc_receipts_v2. Leave empty to include every type.',
+  },
+  l1_hash: {
+    type: 'string',
+    default: 'empty (all)',
+    desc: 'Exact Helium L1 transaction hash.',
+  },
+  l1_block_height: {
+    type: 'integer',
+    default: 'empty (all)',
+    desc: 'Exact Helium L1 block height.',
+  },
   packet_type: { type: 'string', default: 'empty', desc: 'IoT packet type (alias: type).' },
   free: { type: 'true | false', default: 'empty', desc: 'Free vs paid IoT packets.' },
   now_ts: { type: 'integer (unix s)', default: 'current UTC', desc: 'Reference time for delegation lock / voting power.' },
@@ -495,9 +536,77 @@ const FIELD_DESCRIPTIONS = {
   makerCount: 'Number of distinct gateway makers.',
   hotspotCount: 'Number of gateways.',
   uniqueHotspots: 'Number of distinct gateways.',
-  issuedCount: 'Distinct gateways issued in the period.',
-  iotOnboardCount: 'Distinct gateways onboarded to IoT in the period.',
-  mobileOnboardCount: 'Distinct gateways onboarded to Mobile in the period.',
+  issuedCount: 'Distinct gateways issued that day.',
+  iotOnboardCount: 'Distinct gateways onboarded to IoT that day.',
+  mobileOnboardCount: 'Distinct gateways onboarded to Mobile that day.',
+  blockCount: 'Number of L1 blocks produced that day.',
+  transactionCount: 'Number of L1 transactions.',
+  challengeCount: 'Proof-of-Coverage receipt transactions recorded that day.',
+  packetCount: 'Packets settled by L1 state-channel close transactions that day.',
+  dataCreditsUsed: 'Data Credits consumed by packets settled in L1 state channels.',
+  hntRewarded: 'HNT distributed by L1 reward transactions that day.',
+  firstHeight: 'Lowest L1 block height that day.',
+  lastHeight: 'Highest L1 block height that day.',
+  transactionType: 'L1 transaction type, such as add_gateway_v1, assert_location_v1, or payment_v1.',
+  gatewaysAdded: 'Gateways added to the L1 chain that day.',
+  locationsAsserted: 'Gateway location asserts that day.',
+  hotspotsTransferred: 'Hotspot ownership transfers that day.',
+  paymentCount: 'HNT payment transactions that day.',
+  paymentHnt: 'HNT paid that day, in whole HNT.',
+  hntBurned: 'HNT burned for Data Credits that day, in whole HNT.',
+  stakingFeeDc: 'Data Credits paid as staking fees on gateway adds and location asserts.',
+  amountHnt: 'Payment or burn amount in whole HNT.',
+  gateway: 'Helium gateway address.',
+  owner: 'Gateway owner address.',
+  payee: 'Account that received the HNT.',
+  location: 'Asserted gateway location, as an H3 index.',
+  distinctTransactionCount: 'Distinct L1 transaction hashes.',
+  transactionTypeCount: 'Distinct L1 transaction types recorded that day.',
+  avgTransactionsPerBlock: 'Average L1 transactions included per block.',
+  p95TransactionsPerBlock: '95th percentile of L1 transactions per block.',
+  firstBlockHeight: 'Lowest L1 block height represented.',
+  lastBlockHeight: 'Highest L1 block height represented.',
+  firstBlockTime: 'UTC time of the first L1 block that day.',
+  lastBlockTime: 'UTC time of the last L1 block that day.',
+  firstLedgerTimestamp: 'First ledger timestamp recorded that day.',
+  lastLedgerTimestamp: 'Last ledger timestamp recorded that day.',
+  avgBlockTimeSeconds: 'Average elapsed seconds between consecutive L1 blocks.',
+  startingPreviousHash: 'Previous-block hash referenced by the first block that day.',
+  firstBlockHash: 'Hash of the first L1 block that day.',
+  lastBlockHash: 'Hash of the last L1 block that day.',
+  firstHbbftRound: 'Lowest HBBFT consensus round recorded that day.',
+  lastHbbftRound: 'Highest HBBFT consensus round recorded that day.',
+  firstElectionEpoch: 'First validator election epoch represented that day.',
+  lastElectionEpoch: 'Last validator election epoch represented that day.',
+  electionEpochCount: 'Distinct validator election epochs represented that day.',
+  firstEpochStart: 'Lowest epoch-start block height represented that day.',
+  lastEpochStart: 'Highest epoch-start block height represented that day.',
+  rescueBlockCount: 'Blocks carrying a rescue consensus signature.',
+  latestRescueSignature: 'Rescue signature from the latest rescue block that day.',
+  snapshotBlockCount: 'Blocks carrying a ledger snapshot hash.',
+  latestSnapshotHash: 'Snapshot hash from the latest snapshot block that day.',
+  firstCreatedAt: 'Earliest warehouse creation timestamp for the day’s blocks.',
+  lastCreatedAt: 'Latest warehouse creation timestamp for the day’s blocks.',
+  avgIngestDelaySeconds: 'Average delay between L1 block time and warehouse creation.',
+  firstTransactionTime: 'UTC time of the first matching L1 transaction.',
+  lastTransactionTime: 'UTC time of the last matching L1 transaction.',
+  avgFieldsBytes: 'Average byte size of the transaction fields JSON.',
+  fieldsBytes: 'Total byte size of transaction fields JSON.',
+  invalidJsonCount: 'Rows whose fields value is not valid JSON.',
+  height: 'Helium L1 block height.',
+  ledgerTimestamp: 'Timestamp encoded in the Helium L1 block.',
+  previousHash: 'Hash of the preceding L1 block.',
+  blockHash: 'Hash of this L1 block.',
+  hbbftRound: 'HBBFT consensus round.',
+  electionEpoch: 'Validator election epoch.',
+  epochStart: 'Block height at which the epoch started.',
+  rescueSignature: 'Consensus rescue signature, when present.',
+  snapshotHash: 'Ledger snapshot hash, when present.',
+  createdAt: 'Timestamp when the block row was created in the warehouse.',
+  blockHeight: 'Helium L1 block height containing the transaction.',
+  transactionHash: 'Helium L1 transaction hash.',
+  fields: 'Raw JSON payload for the L1 transaction type.',
+  transactionTime: 'UTC time of the Helium L1 transaction.',
   firstMintDate: 'Earliest issue or onboard date for this maker.',
   lastMintDate: 'Most recent issue or onboard date for this maker.',
   tableName: 'Oracle table name.',
@@ -591,6 +700,33 @@ const FIELD_TYPES = {
   mintDate: 'date | null',
   amountDeposited: 'number',
   estimatedDc: 'integer',
+  challengeCount: 'integer',
+  packetCount: 'integer',
+  dataCreditsUsed: 'integer',
+  hntRewarded: 'number',
+  gatewaysAdded: 'integer',
+  locationsAsserted: 'integer',
+  hotspotsTransferred: 'integer',
+  stakingFeeDc: 'integer',
+  paymentHnt: 'number',
+  hntBurned: 'number',
+  amountHnt: 'number',
+  firstHeight: 'integer',
+  lastHeight: 'integer',
+  firstBlockHeight: 'integer',
+  lastBlockHeight: 'integer',
+  height: 'integer',
+  blockHeight: 'integer',
+  hbbftRound: 'integer',
+  electionEpoch: 'integer',
+  epochStart: 'integer',
+  firstHbbftRound: 'integer',
+  lastHbbftRound: 'integer',
+  firstElectionEpoch: 'integer',
+  lastElectionEpoch: 'integer',
+  firstEpochStart: 'integer',
+  lastEpochStart: 'integer',
+  p95TransactionsPerBlock: 'integer',
   gatewaysWithHeartbeat: 'integer',
   gatewaysWith4h: 'integer',
   gatewaysWith12h: 'integer',
@@ -603,17 +739,26 @@ const FIELD_TYPES = {
 const STRING_FIELDS = new Set([
   'address',
   'assetId',
+  'blockHash',
   'cellType',
   'coverageObject',
   'dao',
   'entityKey',
   'entityKeyB64',
   'eventId',
+  'fields',
+  'firstBlockHash',
   'gateway',
+  'location',
+  'owner',
+  'payee',
   'hotspotKey',
   'instructionType',
   'keySerialization',
   'keyToAssetKey',
+  'lastBlockHash',
+  'latestRescueSignature',
+  'latestSnapshotHash',
   'makerName',
   'network',
   'nftMint',
@@ -623,14 +768,20 @@ const STRING_FIELDS = new Set([
   'payloadSizeGroup',
   'positionAuthority',
   'position',
+  'previousHash',
   'proxyWallet',
   'radioAccessTechnology',
   'region',
+  'rescueSignature',
   'rewardType',
+  'snapshotHash',
+  'startingPreviousHash',
   'subDao',
   'subscriberId',
   'tableName',
   'tokenSymbol',
+  'transactionHash',
+  'transactionType',
   'txId',
   'wallet',
   'kind',
@@ -659,8 +810,19 @@ const DATE_FIELDS = new Set([
 
 const DATETIME_FIELDS = new Set([
   'blockTime',
+  'createdAt',
+  'firstBlockTime',
+  'firstCreatedAt',
+  'firstLedgerTimestamp',
+  'firstTransactionTime',
   'hourStart',
+  'lastBlockTime',
+  'lastCreatedAt',
+  'lastLedgerTimestamp',
+  'lastTransactionTime',
+  'ledgerTimestamp',
   'receivedTimestamp',
+  'transactionTime',
   'usageTimestamp',
 ]);
 
@@ -724,6 +886,7 @@ function titleCase(name) {
 function groupLabel(g) {
   if (g === 'hotspot') return 'Gateway';
   if (g === 'delegation') return 'Delegations';
+  if (g === 'helium_l1_data') return 'Helium L1 Data';
   if (g === 'iot') return 'IoT';
   if (g === 'oui') return 'OUI';
   return g.charAt(0).toUpperCase() + g.slice(1);
@@ -966,6 +1129,32 @@ function endpointFilters(group, name, dates, inferred) {
     return base;
   }
 
+  if (group === 'helium_l1_data') {
+    const l1Dates = [
+      filter('from', 'From', 'date', {
+        default: '2023-03-20',
+        max: '2023-04-18',
+        description:
+          'Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.',
+      }),
+      filter('to', 'To', 'date', {
+        default: '2023-04-18',
+        max: '2023-04-18',
+        description:
+          'Inclusive end date. Must be paired with from and cannot be after 2023-04-18.',
+      }),
+    ];
+    if (name === 'l1_transactions_by_type') {
+      return [
+        ...l1Dates,
+        filter('l1_type', 'Transaction type'),
+        filter('limit', 'Limit', 'number', { default: '100' }),
+        filter('offset', 'Offset', 'number', { default: '0' }),
+      ];
+    }
+    return l1Dates;
+  }
+
   if (group === 'oui') {
     if (name === 'oui_list') return [];
     const base = ouiDates();
@@ -1174,11 +1363,14 @@ function renderDateRangeFilter(startF, endF, itemId) {
   const dateMode = startF.date_mode || endF.date_mode;
   const isInactiveDateMode = dateMode && dateMode !== 'month';
   const disabledAttr = isInactiveDateMode ? ' data-disabled="1"' : '';
+  const maxDate = startF.max || endF.max || '';
+  const maxAttr = maxDate ? ` data-max-date="${esc(maxDate)}"` : '';
   const dateModeAttrs = dateMode
     ? ` data-date-mode="${esc(dateMode)}"${isInactiveDateMode ? ' hidden' : ''}`
     : '';
   const startVal = esc(startF.default || '');
   const endVal = esc(endF.default || '');
+  const maxNote = maxDate ? `Max 30 days · through ${esc(maxDate)}` : 'Max 30 days';
   const presets = [
     ['last-week', 'Last week'],
     ['last-30', 'Last 30 days'],
@@ -1191,7 +1383,7 @@ function renderDateRangeFilter(startF, endF, itemId) {
     )
     .join('');
   return `<div class="filter-row filter-row-span-2 date-range-filter-row" data-filter-type="date-range"${dateModeAttrs}>
-    <div class="date-range-picker"${disabledAttr} id="dr-${esc(itemId)}">
+    <div class="date-range-picker"${disabledAttr}${maxAttr} id="dr-${esc(itemId)}">
       <div class="date-range-top">
         <div class="date-range-fields">
           <div class="date-range-field">
@@ -1212,7 +1404,7 @@ function renderDateRangeFilter(startF, endF, itemId) {
         </div>
         <div class="date-range-presets-row">
           <div class="date-range-presets">${presets}</div>
-          <span class="date-range-max-note">Max 30 days</span>
+          <span class="date-range-max-note">${maxNote}</span>
         </div>
       </div>
       <div class="date-range-calendar">

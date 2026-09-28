@@ -506,9 +506,13 @@
       line-height: 1;
       padding: 0;
     }
-    .date-range-month-nav button:hover {
+    .date-range-month-nav button:hover:not(:disabled) {
       background: rgba(255,255,255,0.06);
       color: var(--text);
+    }
+    .date-range-month-nav button:disabled {
+      opacity: 0.35;
+      cursor: default;
     }
     .date-range-weekdays {
       display: grid;
@@ -920,7 +924,7 @@
         </a>
       </div>
       <div class="header-main">
-        <div class="header-meta">35 endpoints</div>
+        <div class="header-meta">38 endpoints</div>
       </div>
     </header>
     <div class="layout">
@@ -967,7 +971,13 @@
         <span class="nav-tag-name">Delegations</span>
         <span class="nav-tag-count">6</span>
       </summary>
-      <div class="nav-tag-list"><button class="nav-api" data-panel="ep-delegation-active_stake" data-tag="delegation" data-search="Active Stake /api/helium/delegation/active_stake" type="button">Active Stake</button><button class="nav-api" data-panel="ep-delegation-active_stake_by_dao" data-tag="delegation" data-search="Active Stake By DAO /api/helium/delegation/active_stake_by_dao" type="button">Active Stake By DAO</button><button class="nav-api" data-panel="ep-delegation-wallet_positions" data-tag="delegation" data-search="Wallet Positions /api/helium/delegation/wallet_positions" type="button">Wallet Positions</button><button class="nav-api" data-panel="ep-delegation-delegated_positions" data-tag="delegation" data-search="Delegated Positions /api/helium/delegation/delegated_positions" type="button">Delegated Positions</button><button class="nav-api" data-panel="ep-delegation-wallet_proxies" data-tag="delegation" data-search="Wallet Proxies /api/helium/delegation/wallet_proxies" type="button">Wallet Proxies</button><button class="nav-api" data-panel="ep-delegation-open_positions" data-tag="delegation" data-search="Open Delegations /api/helium/delegation/open_positions" type="button">Open Delegations</button></div></details>
+      <div class="nav-tag-list"><button class="nav-api" data-panel="ep-delegation-active_stake" data-tag="delegation" data-search="Active Stake /api/helium/delegation/active_stake" type="button">Active Stake</button><button class="nav-api" data-panel="ep-delegation-active_stake_by_dao" data-tag="delegation" data-search="Active Stake By DAO /api/helium/delegation/active_stake_by_dao" type="button">Active Stake By DAO</button><button class="nav-api" data-panel="ep-delegation-wallet_positions" data-tag="delegation" data-search="Wallet Positions /api/helium/delegation/wallet_positions" type="button">Wallet Positions</button><button class="nav-api" data-panel="ep-delegation-delegated_positions" data-tag="delegation" data-search="Delegated Positions /api/helium/delegation/delegated_positions" type="button">Delegated Positions</button><button class="nav-api" data-panel="ep-delegation-wallet_proxies" data-tag="delegation" data-search="Wallet Proxies /api/helium/delegation/wallet_proxies" type="button">Wallet Proxies</button><button class="nav-api" data-panel="ep-delegation-open_positions" data-tag="delegation" data-search="Open Delegations /api/helium/delegation/open_positions" type="button">Open Delegations</button></div></details><details class="nav-tag" data-tag="helium_l1_data" data-search="Helium L1 Data">
+      <summary>
+        <svg class="nav-tag-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="nav-tag-name">Helium L1 Data</span>
+        <span class="nav-tag-count">3</span>
+      </summary>
+      <div class="nav-tag-list"><button class="nav-api" data-panel="ep-helium_l1_data-l1_blocks_daily" data-tag="helium_l1_data" data-search="L1 Daily Metrics /api/helium/helium_l1_data/l1_blocks_daily" type="button">L1 Daily Metrics</button><button class="nav-api" data-panel="ep-helium_l1_data-l1_activity_daily" data-tag="helium_l1_data" data-search="L1 Network Activity /api/helium/helium_l1_data/l1_activity_daily" type="button">L1 Network Activity</button><button class="nav-api" data-panel="ep-helium_l1_data-l1_transactions_by_type" data-tag="helium_l1_data" data-search="L1 Transactions by Type /api/helium/helium_l1_data/l1_transactions_by_type" type="button">L1 Transactions by Type</button></div></details>
         </div>
         <div class="sidebar-footer">
           <p class="sidebar-copyright">© 2026 Top Ledger. All rights reserved.</p>
@@ -1218,7 +1228,7 @@
       </div>
     </div>
   </div>
-<div id="panel-ep-hotspot-hotspot_onboard_cadence" class="panel" data-endpoint='{"id":"hotspot-hotspot_onboard_cadence","title":"Gateway Onboarding Activity","query_name":"HOTSPOT_ONBOARD_CADENCE","description":"Shows how many gateways were issued or onboarded to IoT and Mobile each day.","long_description":"Shows how many gateways were issued or onboarded to IoT and Mobile each day.","method":"GET","path":"/api/helium/hotspot/hotspot_onboard_cadence","url":"http://localhost:8138/api/helium/hotspot/hotspot_onboard_cadence","category":"hotspot","tag":"Gateway","filters":[{"name":"from","label":"From","type":"date","required":false,"description":"Inclusive start date. Must be paired with to; ranges are limited to 30 days.","default":"","options":null},{"name":"to","label":"To","type":"date","required":false,"description":"Inclusive end date. Must be paired with from and cannot be in the future.","default":"","options":null}],"response_schema":[{"field":"date","type":"date","description":"Calendar date for this row, in YYYY-MM-DD format."},{"field":"hotspotCount","type":"integer","description":"Number of gateways."},{"field":"issuedCount","type":"integer","description":"Distinct gateways issued in the period."},{"field":"iotOnboardCount","type":"integer","description":"Distinct gateways onboarded to IoT in the period."},{"field":"mobileOnboardCount","type":"integer","description":"Distinct gateways onboarded to Mobile in the period."}]}'>
+<div id="panel-ep-hotspot-hotspot_onboard_cadence" class="panel" data-endpoint='{"id":"hotspot-hotspot_onboard_cadence","title":"Gateway Onboarding Activity","query_name":"HOTSPOT_ONBOARD_CADENCE","description":"Shows how many gateways were issued or onboarded to IoT and Mobile each day.","long_description":"Shows how many gateways were issued or onboarded to IoT and Mobile each day.","method":"GET","path":"/api/helium/hotspot/hotspot_onboard_cadence","url":"http://localhost:8138/api/helium/hotspot/hotspot_onboard_cadence","category":"hotspot","tag":"Gateway","filters":[{"name":"from","label":"From","type":"date","required":false,"description":"Inclusive start date. Must be paired with to; ranges are limited to 30 days.","default":"","options":null},{"name":"to","label":"To","type":"date","required":false,"description":"Inclusive end date. Must be paired with from and cannot be in the future.","default":"","options":null}],"response_schema":[{"field":"date","type":"date","description":"Calendar date for this row, in YYYY-MM-DD format."},{"field":"issuedCount","type":"integer","description":"Distinct gateways issued that day."},{"field":"iotOnboardCount","type":"integer","description":"Distinct gateways onboarded to IoT that day."},{"field":"mobileOnboardCount","type":"integer","description":"Distinct gateways onboarded to Mobile that day."}]}'>
     <div class="panel-eyebrow">Gateway</div>
     <h1>Gateway Onboarding Activity</h1>
     <p class="panel-desc">Shows how many gateways were issued or onboarded to IoT and Mobile each day.</p>
@@ -1260,7 +1270,7 @@
       <summary class="section-card-head section-collapse-summary"><svg class="section-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span>Response schema</span></summary>
       <div class="section-card-body" style="padding:0;overflow-x:auto"><table class="schema-table">
             <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-            <tbody><tr><td><code>date</code></td><td><span class="type-pill">date</span></td><td class="schema-desc">Calendar date for this row, in YYYY-MM-DD format.</td></tr><tr><td><code>hotspotCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Number of gateways.</td></tr><tr><td><code>issuedCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Distinct gateways issued in the period.</td></tr><tr><td><code>iotOnboardCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Distinct gateways onboarded to IoT in the period.</td></tr><tr><td><code>mobileOnboardCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Distinct gateways onboarded to Mobile in the period.</td></tr></tbody>
+            <tbody><tr><td><code>date</code></td><td><span class="type-pill">date</span></td><td class="schema-desc">Calendar date for this row, in YYYY-MM-DD format.</td></tr><tr><td><code>issuedCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Distinct gateways issued that day.</td></tr><tr><td><code>iotOnboardCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Distinct gateways onboarded to IoT that day.</td></tr><tr><td><code>mobileOnboardCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Distinct gateways onboarded to Mobile that day.</td></tr></tbody>
           </table></div>
     </details>
         <div class="section-card params-card">
@@ -5655,6 +5665,471 @@
       </div>
     </div>
   </div>
+<div id="panel-ep-helium_l1_data-l1_blocks_daily" class="panel" data-endpoint='{"id":"helium_l1_data-l1_blocks_daily","title":"L1 Daily Metrics","query_name":"L1_BLOCKS_DAILY","description":"Shows daily Helium L1 blocks, transactions, block time, PoC receipts, packet and Data Credit usage, and HNT rewards.","long_description":"Shows daily Helium L1 blocks, transactions, block time, PoC receipts, packet and Data Credit usage, and HNT rewards.","method":"GET","path":"/api/helium/helium_l1_data/l1_blocks_daily","url":"http://localhost:8138/api/helium/helium_l1_data/l1_blocks_daily","category":"helium_l1_data","tag":"Helium L1 Data","filters":[{"name":"from","label":"From","type":"date","required":false,"description":"Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.","default":"2023-03-20","options":null,"max":"2023-04-18"},{"name":"to","label":"To","type":"date","required":false,"description":"Inclusive end date. Must be paired with from and cannot be after 2023-04-18.","default":"2023-04-18","options":null,"max":"2023-04-18"}],"response_schema":[{"field":"date","type":"date","description":"Calendar date for this row, in YYYY-MM-DD format."},{"field":"blockCount","type":"integer","description":"Number of L1 blocks produced that day."},{"field":"transactionCount","type":"integer","description":"Number of L1 transactions."},{"field":"avgBlockTimeSeconds","type":"number","description":"Average elapsed seconds between consecutive L1 blocks."},{"field":"challengeCount","type":"integer","description":"Proof-of-Coverage receipt transactions recorded that day."},{"field":"packetCount","type":"integer","description":"Number of LoRaWAN / data packets."},{"field":"dataCreditsUsed","type":"integer","description":"Data Credits consumed by packets settled in L1 state channels."},{"field":"hntRewarded","type":"number","description":"HNT distributed by L1 reward transactions that day."}]}'>
+    <div class="panel-eyebrow">Helium L1 Data</div>
+    <h1>L1 Daily Metrics</h1>
+    <p class="panel-desc">Shows daily Helium L1 blocks, transactions, block time, PoC receipts, packet and Data Credit usage, and HNT rewards.</p>
+    <div class="panel-row-endpoint">
+      <div class="section-card">
+        <div class="section-card-head">Endpoint</div>
+        <div class="section-card-body">
+          <div class="path-bar">
+            <span class="m">GET</span>
+            <span class="p endpoint-url-text">/api/helium/helium_l1_data/l1_blocks_daily</span>
+            <button class="icon-btn copy-url-btn" type="button" title="Copy URL" aria-label="Copy URL" data-copy-title="Copy URL"><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-row-split">
+      <div class="panel-col-main">
+        <details class="section-card section-collapse methods-card">
+      <summary class="section-card-head section-collapse-summary"><svg class="section-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span>Parameters</span></summary>
+      <div class="section-card-body"><div class="method-param-list"><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">from</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">date (YYYY-MM-DD)</span>
+    </div>
+    <p class="method-param-desc">Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.</p>
+    <p class="method-param-usage">If you omit it, the server uses <code>2023-03-20</code>.</p>
+  </article><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">to</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">date (YYYY-MM-DD)</span>
+    </div>
+    <p class="method-param-desc">Inclusive end date. Must be paired with from and cannot be after 2023-04-18.</p>
+    <p class="method-param-usage">If you omit it, the server uses <code>2023-04-18</code>.</p>
+  </article></div></div>
+    </details>
+        <details class="section-card section-collapse methods-card">
+      <summary class="section-card-head section-collapse-summary"><svg class="section-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span>Response schema</span></summary>
+      <div class="section-card-body" style="padding:0;overflow-x:auto"><table class="schema-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody><tr><td><code>date</code></td><td><span class="type-pill">date</span></td><td class="schema-desc">Calendar date for this row, in YYYY-MM-DD format.</td></tr><tr><td><code>blockCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Number of L1 blocks produced that day.</td></tr><tr><td><code>transactionCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Number of L1 transactions.</td></tr><tr><td><code>avgBlockTimeSeconds</code></td><td><span class="type-pill">number</span></td><td class="schema-desc">Average elapsed seconds between consecutive L1 blocks.</td></tr><tr><td><code>challengeCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Proof-of-Coverage receipt transactions recorded that day.</td></tr><tr><td><code>packetCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Number of LoRaWAN / data packets.</td></tr><tr><td><code>dataCreditsUsed</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Data Credits consumed by packets settled in L1 state channels.</td></tr><tr><td><code>hntRewarded</code></td><td><span class="type-pill">number</span></td><td class="schema-desc">HNT distributed by L1 reward transactions that day.</td></tr></tbody>
+          </table></div>
+    </details>
+        <div class="section-card params-card">
+        <div class="section-card-head">Request</div>
+        <div class="section-card-body"><div class="filter-grid"><div class="filter-row filter-row-span-2 date-range-filter-row" data-filter-type="date-range">
+    <div class="date-range-picker" data-max-date="2023-04-18" id="dr-helium_l1_data-l1_blocks_daily">
+      <div class="date-range-top">
+        <div class="date-range-fields">
+          <div class="date-range-field">
+            <span class="date-range-field-label">Start day</span>
+            <div class="date-range-input-wrap">
+              <svg class="date-range-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+              <input type="text" class="date-range-display" id="dr-helium_l1_data-l1_blocks_daily-start" data-range-part="start-input" data-name="from" value="2023-03-20" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+          </div>
+          <span class="date-range-field-arrow" aria-hidden="true">→</span>
+          <div class="date-range-field">
+            <span class="date-range-field-label">End day</span>
+            <div class="date-range-input-wrap">
+              <svg class="date-range-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+              <input type="text" class="date-range-display" data-range-part="end-input" data-name="to" value="2023-04-18" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+          </div>
+        </div>
+        <div class="date-range-presets-row">
+          <div class="date-range-presets"><button type="button" class="date-range-preset" data-range-preset="last-week">Last week</button><button type="button" class="date-range-preset" data-range-preset="last-30">Last 30 days</button><button type="button" class="date-range-preset" data-range-preset="this-week">This week</button><button type="button" class="date-range-preset" data-range-preset="this-month">This month</button></div>
+          <span class="date-range-max-note">Max 30 days · through 2023-04-18</span>
+        </div>
+      </div>
+      <div class="date-range-calendar">
+        <div class="date-range-calendar-bar">
+          <span class="date-range-summary" data-range-part="range-summary"></span>
+          <div class="date-range-month-nav">
+            <button type="button" data-range-part="prev-month" aria-label="Previous month">‹</button>
+            <button type="button" data-range-part="next-month" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <span class="date-range-hint" data-range-part="range-hint" hidden></span>
+        <div class="date-range-months">
+          <div class="date-range-month-pane">
+            <div class="date-range-month-title" data-range-part="month-label-0"></div>
+            <div class="date-range-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="date-range-grid" data-range-part="grid-0"></div>
+          </div>
+          <div class="date-range-month-pane">
+            <div class="date-range-month-title" data-range-part="month-label-1"></div>
+            <div class="date-range-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="date-range-grid" data-range-part="grid-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div></div>
+      </div>
+        <div class="section-card sample-card sample-collapsed">
+      <div class="section-card-head sample-card-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span>Response</span>
+        <div class="sample-toolbar">
+          <button class="icon-btn copy-sample-btn" type="button" title="Copy JSON" aria-label="Copy JSON" data-copy-title="Copy JSON" disabled><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+          <button class="icon-btn download-sample-csv-btn" type="button" title="Download CSV" aria-label="Download CSV" disabled>
+            <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          </button>
+          <button class="btn load-sample-btn" type="button">Load response</button>
+        </div>
+      </div>
+      <div class="section-card-body sample-card-body" hidden>
+        <div class="sample-meta" hidden></div>
+        <input class="sample-search" type="search" placeholder="Search response…" autocomplete="off" disabled>
+        <div class="sample-view-tabs" role="tablist" hidden>
+          <button type="button" class="sample-view-tab active" data-sample-view="json" role="tab" aria-selected="true">JSON</button>
+          <button type="button" class="sample-view-tab" data-sample-view="table" role="tab" aria-selected="false">Table</button>
+        </div>
+        <div class="sample-body"></div>
+      </div>
+      <div class="sample-edge-progress" aria-hidden="true"><div class="sample-edge-progress-fill"></div></div>
+    </div>
+      </div>
+      <div class="panel-col-side">
+        <div class="section-card code-samples-card">
+      <div class="section-card-head">Client libraries</div>
+      <div class="code-tabs-row">
+        <div class="code-tabs" role="tablist">
+          <button type="button" class="code-tab active" data-lang="shell" role="tab">Shell</button>
+          <button type="button" class="code-tab" data-lang="node" role="tab">Node.js</button>
+          <button type="button" class="code-tab" data-lang="python" role="tab">Python</button>
+          <button type="button" class="code-tab" data-lang="rust" role="tab">Rust</button>
+        </div>
+        <button class="icon-btn copy-code-btn" type="button" title="Copy code" aria-label="Copy code" data-copy-title="Copy code"><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+      </div>
+      <div class="code-editor-pane">
+        <div class="code-editor-ln" aria-hidden="true">1</div>
+        <pre class="code-sample-pre"><code>curl -s 'http://localhost:8138/api/helium/helium_l1_data/l1_blocks_daily'</code></pre>
+      </div>
+    </div>
+      </div>
+    </div>
+  </div>
+<div id="panel-ep-helium_l1_data-l1_activity_daily" class="panel" data-endpoint='{"id":"helium_l1_data-l1_activity_daily","title":"L1 Network Activity","query_name":"L1_ACTIVITY_DAILY","description":"Shows daily gateway adds, location asserts, hotspot transfers, HNT payments, and HNT burns.","long_description":"Shows daily gateway adds, location asserts, hotspot transfers, HNT payments, and HNT burns.","method":"GET","path":"/api/helium/helium_l1_data/l1_activity_daily","url":"http://localhost:8138/api/helium/helium_l1_data/l1_activity_daily","category":"helium_l1_data","tag":"Helium L1 Data","filters":[{"name":"from","label":"From","type":"date","required":false,"description":"Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.","default":"2023-03-20","options":null,"max":"2023-04-18"},{"name":"to","label":"To","type":"date","required":false,"description":"Inclusive end date. Must be paired with from and cannot be after 2023-04-18.","default":"2023-04-18","options":null,"max":"2023-04-18"}],"response_schema":[{"field":"date","type":"date","description":"Calendar date for this row, in YYYY-MM-DD format."},{"field":"gatewaysAdded","type":"integer","description":"Gateways added to the L1 chain that day."},{"field":"locationsAsserted","type":"integer","description":"Gateway location asserts that day."},{"field":"hotspotsTransferred","type":"integer","description":"Hotspot ownership transfers that day."},{"field":"paymentCount","type":"integer","description":"HNT payment transactions that day."},{"field":"paymentHnt","type":"number","description":"HNT paid that day, in whole HNT."},{"field":"hntBurned","type":"number","description":"HNT burned for Data Credits that day, in whole HNT."},{"field":"stakingFeeDc","type":"integer","description":"Data Credits paid as staking fees on gateway adds and location asserts."}]}'>
+    <div class="panel-eyebrow">Helium L1 Data</div>
+    <h1>L1 Network Activity</h1>
+    <p class="panel-desc">Shows daily gateway adds, location asserts, hotspot transfers, HNT payments, and HNT burns.</p>
+    <div class="panel-row-endpoint">
+      <div class="section-card">
+        <div class="section-card-head">Endpoint</div>
+        <div class="section-card-body">
+          <div class="path-bar">
+            <span class="m">GET</span>
+            <span class="p endpoint-url-text">/api/helium/helium_l1_data/l1_activity_daily</span>
+            <button class="icon-btn copy-url-btn" type="button" title="Copy URL" aria-label="Copy URL" data-copy-title="Copy URL"><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-row-split">
+      <div class="panel-col-main">
+        <details class="section-card section-collapse methods-card">
+      <summary class="section-card-head section-collapse-summary"><svg class="section-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span>Parameters</span></summary>
+      <div class="section-card-body"><div class="method-param-list"><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">from</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">date (YYYY-MM-DD)</span>
+    </div>
+    <p class="method-param-desc">Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.</p>
+    <p class="method-param-usage">If you omit it, the server uses <code>2023-03-20</code>.</p>
+  </article><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">to</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">date (YYYY-MM-DD)</span>
+    </div>
+    <p class="method-param-desc">Inclusive end date. Must be paired with from and cannot be after 2023-04-18.</p>
+    <p class="method-param-usage">If you omit it, the server uses <code>2023-04-18</code>.</p>
+  </article></div></div>
+    </details>
+        <details class="section-card section-collapse methods-card">
+      <summary class="section-card-head section-collapse-summary"><svg class="section-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span>Response schema</span></summary>
+      <div class="section-card-body" style="padding:0;overflow-x:auto"><table class="schema-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody><tr><td><code>date</code></td><td><span class="type-pill">date</span></td><td class="schema-desc">Calendar date for this row, in YYYY-MM-DD format.</td></tr><tr><td><code>gatewaysAdded</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Gateways added to the L1 chain that day.</td></tr><tr><td><code>locationsAsserted</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Gateway location asserts that day.</td></tr><tr><td><code>hotspotsTransferred</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Hotspot ownership transfers that day.</td></tr><tr><td><code>paymentCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">HNT payment transactions that day.</td></tr><tr><td><code>paymentHnt</code></td><td><span class="type-pill">number</span></td><td class="schema-desc">HNT paid that day, in whole HNT.</td></tr><tr><td><code>hntBurned</code></td><td><span class="type-pill">number</span></td><td class="schema-desc">HNT burned for Data Credits that day, in whole HNT.</td></tr><tr><td><code>stakingFeeDc</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Data Credits paid as staking fees on gateway adds and location asserts.</td></tr></tbody>
+          </table></div>
+    </details>
+        <div class="section-card params-card">
+        <div class="section-card-head">Request</div>
+        <div class="section-card-body"><div class="filter-grid"><div class="filter-row filter-row-span-2 date-range-filter-row" data-filter-type="date-range">
+    <div class="date-range-picker" data-max-date="2023-04-18" id="dr-helium_l1_data-l1_activity_daily">
+      <div class="date-range-top">
+        <div class="date-range-fields">
+          <div class="date-range-field">
+            <span class="date-range-field-label">Start day</span>
+            <div class="date-range-input-wrap">
+              <svg class="date-range-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+              <input type="text" class="date-range-display" id="dr-helium_l1_data-l1_activity_daily-start" data-range-part="start-input" data-name="from" value="2023-03-20" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+          </div>
+          <span class="date-range-field-arrow" aria-hidden="true">→</span>
+          <div class="date-range-field">
+            <span class="date-range-field-label">End day</span>
+            <div class="date-range-input-wrap">
+              <svg class="date-range-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+              <input type="text" class="date-range-display" data-range-part="end-input" data-name="to" value="2023-04-18" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+          </div>
+        </div>
+        <div class="date-range-presets-row">
+          <div class="date-range-presets"><button type="button" class="date-range-preset" data-range-preset="last-week">Last week</button><button type="button" class="date-range-preset" data-range-preset="last-30">Last 30 days</button><button type="button" class="date-range-preset" data-range-preset="this-week">This week</button><button type="button" class="date-range-preset" data-range-preset="this-month">This month</button></div>
+          <span class="date-range-max-note">Max 30 days · through 2023-04-18</span>
+        </div>
+      </div>
+      <div class="date-range-calendar">
+        <div class="date-range-calendar-bar">
+          <span class="date-range-summary" data-range-part="range-summary"></span>
+          <div class="date-range-month-nav">
+            <button type="button" data-range-part="prev-month" aria-label="Previous month">‹</button>
+            <button type="button" data-range-part="next-month" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <span class="date-range-hint" data-range-part="range-hint" hidden></span>
+        <div class="date-range-months">
+          <div class="date-range-month-pane">
+            <div class="date-range-month-title" data-range-part="month-label-0"></div>
+            <div class="date-range-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="date-range-grid" data-range-part="grid-0"></div>
+          </div>
+          <div class="date-range-month-pane">
+            <div class="date-range-month-title" data-range-part="month-label-1"></div>
+            <div class="date-range-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="date-range-grid" data-range-part="grid-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div></div>
+      </div>
+        <div class="section-card sample-card sample-collapsed">
+      <div class="section-card-head sample-card-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span>Response</span>
+        <div class="sample-toolbar">
+          <button class="icon-btn copy-sample-btn" type="button" title="Copy JSON" aria-label="Copy JSON" data-copy-title="Copy JSON" disabled><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+          <button class="icon-btn download-sample-csv-btn" type="button" title="Download CSV" aria-label="Download CSV" disabled>
+            <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          </button>
+          <button class="btn load-sample-btn" type="button">Load response</button>
+        </div>
+      </div>
+      <div class="section-card-body sample-card-body" hidden>
+        <div class="sample-meta" hidden></div>
+        <input class="sample-search" type="search" placeholder="Search response…" autocomplete="off" disabled>
+        <div class="sample-view-tabs" role="tablist" hidden>
+          <button type="button" class="sample-view-tab active" data-sample-view="json" role="tab" aria-selected="true">JSON</button>
+          <button type="button" class="sample-view-tab" data-sample-view="table" role="tab" aria-selected="false">Table</button>
+        </div>
+        <div class="sample-body"></div>
+      </div>
+      <div class="sample-edge-progress" aria-hidden="true"><div class="sample-edge-progress-fill"></div></div>
+    </div>
+      </div>
+      <div class="panel-col-side">
+        <div class="section-card code-samples-card">
+      <div class="section-card-head">Client libraries</div>
+      <div class="code-tabs-row">
+        <div class="code-tabs" role="tablist">
+          <button type="button" class="code-tab active" data-lang="shell" role="tab">Shell</button>
+          <button type="button" class="code-tab" data-lang="node" role="tab">Node.js</button>
+          <button type="button" class="code-tab" data-lang="python" role="tab">Python</button>
+          <button type="button" class="code-tab" data-lang="rust" role="tab">Rust</button>
+        </div>
+        <button class="icon-btn copy-code-btn" type="button" title="Copy code" aria-label="Copy code" data-copy-title="Copy code"><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+      </div>
+      <div class="code-editor-pane">
+        <div class="code-editor-ln" aria-hidden="true">1</div>
+        <pre class="code-sample-pre"><code>curl -s 'http://localhost:8138/api/helium/helium_l1_data/l1_activity_daily'</code></pre>
+      </div>
+    </div>
+      </div>
+    </div>
+  </div>
+<div id="panel-ep-helium_l1_data-l1_transactions_by_type" class="panel" data-endpoint='{"id":"helium_l1_data-l1_transactions_by_type","title":"L1 Transactions by Type","query_name":"L1_TRANSACTIONS_BY_TYPE","description":"Shows how many Helium L1 transactions of each type were recorded each day.","long_description":"Shows how many Helium L1 transactions of each type were recorded each day.","method":"GET","path":"/api/helium/helium_l1_data/l1_transactions_by_type","url":"http://localhost:8138/api/helium/helium_l1_data/l1_transactions_by_type","category":"helium_l1_data","tag":"Helium L1 Data","filters":[{"name":"from","label":"From","type":"date","required":false,"description":"Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.","default":"2023-03-20","options":null,"max":"2023-04-18"},{"name":"to","label":"To","type":"date","required":false,"description":"Inclusive end date. Must be paired with from and cannot be after 2023-04-18.","default":"2023-04-18","options":null,"max":"2023-04-18"},{"name":"l1_type","label":"Transaction type","type":"text","required":false,"description":"L1 transaction type, such as payment_v2 or poc_receipts_v2. Leave empty to include every type.","default":"","options":null},{"name":"limit","label":"Limit","type":"number","required":false,"description":"Pagination limit (SQL LIMIT).","default":"100","options":null},{"name":"offset","label":"Offset","type":"number","required":false,"description":"Pagination offset (SQL OFFSET).","default":"0","options":null}],"response_schema":[{"field":"date","type":"date","description":"Calendar date for this row, in YYYY-MM-DD format."},{"field":"transactionType","type":"string","description":"L1 transaction type, such as add_gateway_v1, assert_location_v1, or payment_v1."},{"field":"transactionCount","type":"integer","description":"Number of L1 transactions."}]}'>
+    <div class="panel-eyebrow">Helium L1 Data</div>
+    <h1>L1 Transactions by Type</h1>
+    <p class="panel-desc">Shows how many Helium L1 transactions of each type were recorded each day.</p>
+    <div class="panel-row-endpoint">
+      <div class="section-card">
+        <div class="section-card-head">Endpoint</div>
+        <div class="section-card-body">
+          <div class="path-bar">
+            <span class="m">GET</span>
+            <span class="p endpoint-url-text">/api/helium/helium_l1_data/l1_transactions_by_type</span>
+            <button class="icon-btn copy-url-btn" type="button" title="Copy URL" aria-label="Copy URL" data-copy-title="Copy URL"><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-row-split">
+      <div class="panel-col-main">
+        <details class="section-card section-collapse methods-card">
+      <summary class="section-card-head section-collapse-summary"><svg class="section-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span>Parameters</span></summary>
+      <div class="section-card-body"><div class="method-param-list"><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">from</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">date (YYYY-MM-DD)</span>
+    </div>
+    <p class="method-param-desc">Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.</p>
+    <p class="method-param-usage">If you omit it, the server uses <code>2023-03-20</code>.</p>
+  </article><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">to</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">date (YYYY-MM-DD)</span>
+    </div>
+    <p class="method-param-desc">Inclusive end date. Must be paired with from and cannot be after 2023-04-18.</p>
+    <p class="method-param-usage">If you omit it, the server uses <code>2023-04-18</code>.</p>
+  </article><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">l1_type</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">string</span>
+    </div>
+    <p class="method-param-desc">L1 transaction type, such as payment_v2 or poc_receipts_v2. Leave empty to include every type.</p>
+    <p class="method-param-usage">Optional — omit unless you need to filter by this field.</p>
+  </article><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">limit</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">integer</span>
+    </div>
+    <p class="method-param-desc">Pagination limit (SQL LIMIT).</p>
+    <p class="method-param-usage">If you omit it, the server uses <code>100</code>.</p>
+  </article><article class="method-param">
+    <div class="method-param-head">
+      <code class="method-param-name">offset</code>
+      <span class="req-pill optional">Optional</span>
+      <span class="type-pill">integer</span>
+    </div>
+    <p class="method-param-desc">Pagination offset (SQL OFFSET).</p>
+    <p class="method-param-usage">If you omit it, the server uses <code>0</code>.</p>
+  </article></div></div>
+    </details>
+        <details class="section-card section-collapse methods-card">
+      <summary class="section-card-head section-collapse-summary"><svg class="section-collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span>Response schema</span></summary>
+      <div class="section-card-body" style="padding:0;overflow-x:auto"><table class="schema-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody><tr><td><code>date</code></td><td><span class="type-pill">date</span></td><td class="schema-desc">Calendar date for this row, in YYYY-MM-DD format.</td></tr><tr><td><code>transactionType</code></td><td><span class="type-pill">string</span></td><td class="schema-desc">L1 transaction type, such as add_gateway_v1, assert_location_v1, or payment_v1.</td></tr><tr><td><code>transactionCount</code></td><td><span class="type-pill">integer</span></td><td class="schema-desc">Number of L1 transactions.</td></tr></tbody>
+          </table></div>
+    </details>
+        <div class="section-card params-card">
+        <div class="section-card-head">Request</div>
+        <div class="section-card-body"><div class="filter-grid"><div class="filter-row filter-row-span-2 date-range-filter-row" data-filter-type="date-range">
+    <div class="date-range-picker" data-max-date="2023-04-18" id="dr-helium_l1_data-l1_transactions_by_type">
+      <div class="date-range-top">
+        <div class="date-range-fields">
+          <div class="date-range-field">
+            <span class="date-range-field-label">Start day</span>
+            <div class="date-range-input-wrap">
+              <svg class="date-range-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+              <input type="text" class="date-range-display" id="dr-helium_l1_data-l1_transactions_by_type-start" data-range-part="start-input" data-name="from" value="2023-03-20" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+          </div>
+          <span class="date-range-field-arrow" aria-hidden="true">→</span>
+          <div class="date-range-field">
+            <span class="date-range-field-label">End day</span>
+            <div class="date-range-input-wrap">
+              <svg class="date-range-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+              <input type="text" class="date-range-display" data-range-part="end-input" data-name="to" value="2023-04-18" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+          </div>
+        </div>
+        <div class="date-range-presets-row">
+          <div class="date-range-presets"><button type="button" class="date-range-preset" data-range-preset="last-week">Last week</button><button type="button" class="date-range-preset" data-range-preset="last-30">Last 30 days</button><button type="button" class="date-range-preset" data-range-preset="this-week">This week</button><button type="button" class="date-range-preset" data-range-preset="this-month">This month</button></div>
+          <span class="date-range-max-note">Max 30 days · through 2023-04-18</span>
+        </div>
+      </div>
+      <div class="date-range-calendar">
+        <div class="date-range-calendar-bar">
+          <span class="date-range-summary" data-range-part="range-summary"></span>
+          <div class="date-range-month-nav">
+            <button type="button" data-range-part="prev-month" aria-label="Previous month">‹</button>
+            <button type="button" data-range-part="next-month" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <span class="date-range-hint" data-range-part="range-hint" hidden></span>
+        <div class="date-range-months">
+          <div class="date-range-month-pane">
+            <div class="date-range-month-title" data-range-part="month-label-0"></div>
+            <div class="date-range-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="date-range-grid" data-range-part="grid-0"></div>
+          </div>
+          <div class="date-range-month-pane">
+            <div class="date-range-month-title" data-range-part="month-label-1"></div>
+            <div class="date-range-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="date-range-grid" data-range-part="grid-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><div class="filter-row" data-filter="l1_type" data-filter-type="text">
+    <label for="f-helium_l1_data-l1_transactions_by_type-l1_type">Transaction type</label>
+    <input id="f-helium_l1_data-l1_transactions_by_type-l1_type" type="text" data-name="l1_type" value="" placeholder="l1_type">
+  </div><div class="filter-row" data-filter="limit" data-filter-type="number">
+    <label for="f-helium_l1_data-l1_transactions_by_type-limit">Limit</label>
+    <input id="f-helium_l1_data-l1_transactions_by_type-limit" type="number" data-name="limit" value="100">
+  </div><div class="filter-row" data-filter="offset" data-filter-type="number">
+    <label for="f-helium_l1_data-l1_transactions_by_type-offset">Offset</label>
+    <input id="f-helium_l1_data-l1_transactions_by_type-offset" type="number" data-name="offset" value="0">
+  </div></div></div>
+      </div>
+        <div class="section-card sample-card sample-collapsed">
+      <div class="section-card-head sample-card-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span>Response</span>
+        <div class="sample-toolbar">
+          <button class="icon-btn copy-sample-btn" type="button" title="Copy JSON" aria-label="Copy JSON" data-copy-title="Copy JSON" disabled><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+          <button class="icon-btn download-sample-csv-btn" type="button" title="Download CSV" aria-label="Download CSV" disabled>
+            <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          </button>
+          <button class="btn load-sample-btn" type="button">Load response</button>
+        </div>
+      </div>
+      <div class="section-card-body sample-card-body" hidden>
+        <div class="sample-meta" hidden></div>
+        <input class="sample-search" type="search" placeholder="Search response…" autocomplete="off" disabled>
+        <div class="sample-view-tabs" role="tablist" hidden>
+          <button type="button" class="sample-view-tab active" data-sample-view="json" role="tab" aria-selected="true">JSON</button>
+          <button type="button" class="sample-view-tab" data-sample-view="table" role="tab" aria-selected="false">Table</button>
+        </div>
+        <div class="sample-body"></div>
+      </div>
+      <div class="sample-edge-progress" aria-hidden="true"><div class="sample-edge-progress-fill"></div></div>
+    </div>
+      </div>
+      <div class="panel-col-side">
+        <div class="section-card code-samples-card">
+      <div class="section-card-head">Client libraries</div>
+      <div class="code-tabs-row">
+        <div class="code-tabs" role="tablist">
+          <button type="button" class="code-tab active" data-lang="shell" role="tab">Shell</button>
+          <button type="button" class="code-tab" data-lang="node" role="tab">Node.js</button>
+          <button type="button" class="code-tab" data-lang="python" role="tab">Python</button>
+          <button type="button" class="code-tab" data-lang="rust" role="tab">Rust</button>
+        </div>
+        <button class="icon-btn copy-code-btn" type="button" title="Copy code" aria-label="Copy code" data-copy-title="Copy code"><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
+      </div>
+      <div class="code-editor-pane">
+        <div class="code-editor-ln" aria-hidden="true">1</div>
+        <pre class="code-sample-pre"><code>curl -s 'http://localhost:8138/api/helium/helium_l1_data/l1_transactions_by_type'</code></pre>
+      </div>
+    </div>
+      </div>
+    </div>
+  </div>
       </main>
     </div>
   </div>
@@ -5689,7 +6164,7 @@
       return catalogBasePath() + "/" + encodeURIComponent(group) + "/" + encodeURIComponent(name);
     }
     const DEFAULT_FROM = "2026-09-01";
-    const DEFAULT_TO = "2026-09-22";
+    const DEFAULT_TO = "2026-09-27";
     const STORED_MAKERS = [];
 
 (function initDateRangePickers() {
@@ -5766,22 +6241,22 @@
     return Math.floor((startOfDay(end) - startOfDay(start)) / 86400000) + 1;
   }
 
-  function maxEndForStart(start) {
+  function maxEndForStart(start, cap) {
     var maxEnd = addDays(start, MAX_RANGE_DAYS - 1);
-    var cap = todayLocal();
-    return maxEnd > cap ? cap : maxEnd;
+    var limit = cap || todayLocal();
+    return maxEnd > limit ? limit : maxEnd;
   }
 
-  function normalizeRange(nextStart, nextEnd) {
-    var cap = todayLocal();
-    if (nextStart > cap) nextStart = cap;
-    if (nextEnd > cap) nextEnd = cap;
+  function normalizeRange(nextStart, nextEnd, cap) {
+    var limit = cap || todayLocal();
+    if (nextStart > limit) nextStart = limit;
+    if (nextEnd > limit) nextEnd = limit;
     if (nextEnd < nextStart) {
       var tmp = nextStart;
       nextStart = nextEnd;
       nextEnd = tmp;
     }
-    var maxEnd = maxEndForStart(nextStart);
+    var maxEnd = maxEndForStart(nextStart, limit);
     var adjusted = false;
     if (nextEnd > maxEnd) {
       nextEnd = maxEnd;
@@ -5800,9 +6275,9 @@
     return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
   }
 
-  function buildPresetRange(kind) {
-    var today = todayLocal();
-    var yesterday = addDays(today, -1);
+  function buildPresetRange(kind, cap) {
+    var today = cap ? startOfDay(cap) : todayLocal();
+    var yesterday = cap ? today : addDays(today, -1);
     var start;
     var end;
     if (kind === "last-week") {
@@ -5833,12 +6308,24 @@
     } else {
       return null;
     }
-    return normalizeRange(start, end);
+    return normalizeRange(start, end, cap || null);
   }
 
   document.querySelectorAll(".date-range-picker").forEach(function (root) {
     if (root.dataset.initialized === "1") return;
     root.dataset.initialized = "1";
+
+    var maxDate = parseYmd(root.getAttribute("data-max-date"));
+    function rangeCap() {
+      if (maxDate && maxDate < todayLocal()) return maxDate;
+      return null;
+    }
+    function allowedCap() {
+      return rangeCap() || todayLocal();
+    }
+    function maxDateMessage() {
+      return "Dates after " + formatYmd(maxDate) + " are not available";
+    }
 
     var startInput = root.querySelector("[data-range-part=start-input]");
     var endInput = root.querySelector("[data-range-part=end-input]");
@@ -5860,7 +6347,7 @@
     var startDate = parseDateInput(startInput && startInput.value);
     var endDate = parseDateInput(endInput && endInput.value);
     if (startDate && endDate) {
-      var initial = normalizeRange(startDate, endDate);
+      var initial = normalizeRange(startDate, endDate, allowedCap());
       startDate = initial.start;
       endDate = initial.end;
     } else if (startDate && !endDate) {
@@ -5873,7 +6360,8 @@
       endDate = null;
     }
 
-    var viewMonth = new Date(todayLocal().getFullYear(), todayLocal().getMonth(), 1);
+    var viewAnchor = startDate || rangeCap() || todayLocal();
+    var viewMonth = new Date(viewAnchor.getFullYear(), viewAnchor.getMonth(), 1);
     var activeField = startDate ? "end" : "start";
     var hintTimer = null;
 
@@ -5946,7 +6434,12 @@
         showHint("Use YYYY-MM-DD, 9/5/2026, or Sep 5, 2026");
         return;
       }
-      var cap = todayLocal();
+      if (maxDate && parsed > maxDate) {
+        showHint(maxDateMessage());
+        syncInputs();
+        return;
+      }
+      var cap = allowedCap();
       if (parsed > cap) parsed = cap;
 
       if (field === "start") {
@@ -6009,7 +6502,7 @@
 
     function alignViewToSelection(field) {
       var anchor = field === "start" ? startDate : endDate;
-      if (!anchor) anchor = todayLocal();
+      if (!anchor) anchor = rangeCap() || todayLocal();
       viewMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
       if (field === "end" && startDate && endDate && countDays(startDate, endDate) > 1) {
         var endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
@@ -6041,12 +6534,13 @@
     }
 
     function dayDisabled(cellDate) {
-      var cap = todayLocal();
+      if (maxDate && cellDate > maxDate) return maxDateMessage();
+      var cap = allowedCap();
       if (cellDate > cap) return "Future dates are not allowed";
       if (activeField === "end") {
         if (!startDate) return "Pick a start date first";
         if (cellDate < startDate) return "End must be on or after start";
-        if (cellDate > maxEndForStart(startDate)) {
+        if (cellDate > maxEndForStart(startDate, cap)) {
           return "Queries support at most " + MAX_RANGE_DAYS + " days — pick an earlier end date";
         }
       }
@@ -6055,7 +6549,7 @@
 
     function isInSelectableWindow(cellDate) {
       if (!startDate || endDate) return false;
-      return cellDate > startDate && cellDate <= maxEndForStart(startDate);
+      return cellDate > startDate && cellDate <= maxEndForStart(startDate, allowedCap());
     }
 
     function dayClasses(cellDate, monthAnchor) {
@@ -6074,7 +6568,7 @@
     function alignViewToStartWindow() {
       if (!startDate) return;
       viewMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-      var windowEnd = maxEndForStart(startDate);
+      var windowEnd = maxEndForStart(startDate, allowedCap());
       var endMonth = new Date(windowEnd.getFullYear(), windowEnd.getMonth(), 1);
       if (endMonth.getTime() > addMonths(viewMonth, 1).getTime()) {
         viewMonth = addMonths(endMonth, -1);
@@ -6082,7 +6576,11 @@
     }
 
     function applyPickedDate(picked) {
-      var cap = todayLocal();
+      if (maxDate && picked > maxDate) {
+        showHint(maxDateMessage());
+        return;
+      }
+      var cap = allowedCap();
       if (picked > cap) picked = cap;
 
       if (!startDate || activeField === "start") {
@@ -6150,6 +6648,14 @@
     function renderCalendar() {
       renderMonthGrid(grids[0], viewMonth, monthLabels[0]);
       renderMonthGrid(grids[1], addMonths(viewMonth, 1), monthLabels[1]);
+      if (nextBtn) {
+        if (maxDate) {
+          var maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+          nextBtn.disabled = addMonths(viewMonth, 1).getTime() >= maxMonth.getTime();
+        } else {
+          nextBtn.disabled = false;
+        }
+      }
     }
 
     bindDateInput(startInput, "start");
@@ -6182,6 +6688,7 @@
       });
     nextBtn &&
       nextBtn.addEventListener("click", function () {
+        if (nextBtn.disabled) return;
         viewMonth = addMonths(viewMonth, 1);
         renderCalendar();
       });
@@ -6189,7 +6696,7 @@
     root.querySelectorAll("[data-range-preset]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
-        var range = buildPresetRange(btn.dataset.rangePreset);
+        var range = buildPresetRange(btn.dataset.rangePreset, rangeCap());
         if (!range) return;
         startDate = range.start;
         endDate = range.end;

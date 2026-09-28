@@ -12,6 +12,8 @@ const GROUP_BLURBS = {
     'Daily packet and payload activity, DC usage, and top gateways for one OUI.',
   delegation:
     'Active stake, wallet positions, vote proxies, and open delegation positions.',
+  helium_l1_data:
+    'Aggregated legacy L1 chain activity, network usage, rewards, and transaction metrics.',
 };
 
 /** Lucide-style strokes (24×24) */
@@ -26,6 +28,8 @@ const GROUP_ICONS = {
     '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
   delegation:
     '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+  helium_l1_data:
+    '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
 };
 
 function buildHeroSlatsSvg() {
@@ -306,7 +310,7 @@ function buildHeliumApisLandingHtml(options = {}) {
     <div class="landing-hero-inner">
       <h1>Helium APIs</h1>
       <p class="landing-hero-lead">
-        Gateway, IoT, Mobile, OUI, and delegation data from Top Ledger.
+        Gateway, IoT, Mobile, OUI, delegation, and legacy L1 chain data from Top Ledger.
       </p>
       <div class="landing-path-wrap">
         <div class="landing-path" aria-label="API base path">
