@@ -5733,7 +5733,7 @@
           </div>
         </div>
         <div class="date-range-presets-row">
-          <div class="date-range-presets"><button type="button" class="date-range-preset" data-range-preset="last-week">Last week</button><button type="button" class="date-range-preset" data-range-preset="last-30">Last 30 days</button><button type="button" class="date-range-preset" data-range-preset="this-week">This week</button><button type="button" class="date-range-preset" data-range-preset="this-month">This month</button></div>
+
           <span class="date-range-max-note">Max 30 days · through 2023-04-18</span>
         </div>
       </div>
@@ -5877,7 +5877,7 @@
           </div>
         </div>
         <div class="date-range-presets-row">
-          <div class="date-range-presets"><button type="button" class="date-range-preset" data-range-preset="last-week">Last week</button><button type="button" class="date-range-preset" data-range-preset="last-30">Last 30 days</button><button type="button" class="date-range-preset" data-range-preset="this-week">This week</button><button type="button" class="date-range-preset" data-range-preset="this-month">This month</button></div>
+
           <span class="date-range-max-note">Max 30 days · through 2023-04-18</span>
         </div>
       </div>
@@ -5953,7 +5953,7 @@
       </div>
     </div>
   </div>
-<div id="panel-ep-helium_l1_data-l1_transactions_by_type" class="panel" data-endpoint='{"id":"helium_l1_data-l1_transactions_by_type","title":"L1 Transactions by Type","query_name":"L1_TRANSACTIONS_BY_TYPE","description":"Shows how many Helium L1 transactions of each type were recorded each day.","long_description":"Shows how many Helium L1 transactions of each type were recorded each day.","method":"GET","path":"/api/helium/helium_l1_data/l1_transactions_by_type","url":"http://localhost:8138/api/helium/helium_l1_data/l1_transactions_by_type","category":"helium_l1_data","tag":"Helium L1 Data","filters":[{"name":"from","label":"From","type":"date","required":false,"description":"Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.","default":"2023-03-20","options":null,"max":"2023-04-18"},{"name":"to","label":"To","type":"date","required":false,"description":"Inclusive end date. Must be paired with from and cannot be after 2023-04-18.","default":"2023-04-18","options":null,"max":"2023-04-18"},{"name":"l1_type","label":"Transaction type","type":"text","required":false,"description":"L1 transaction type, such as payment_v2 or poc_receipts_v2. Leave empty to include every type.","default":"","options":null},{"name":"limit","label":"Limit","type":"number","required":false,"description":"Pagination limit (SQL LIMIT).","default":"100","options":null},{"name":"offset","label":"Offset","type":"number","required":false,"description":"Pagination offset (SQL OFFSET).","default":"0","options":null}],"response_schema":[{"field":"date","type":"date","description":"Calendar date for this row, in YYYY-MM-DD format."},{"field":"transactionType","type":"string","description":"L1 transaction type, such as add_gateway_v1, assert_location_v1, or payment_v1."},{"field":"transactionCount","type":"integer","description":"Number of L1 transactions."}]}'>
+<div id="panel-ep-helium_l1_data-l1_transactions_by_type" class="panel" data-endpoint='{"id":"helium_l1_data-l1_transactions_by_type","title":"L1 Transactions by Type","query_name":"L1_TRANSACTIONS_BY_TYPE","description":"Shows how many Helium L1 transactions of each type were recorded each day.","long_description":"Shows how many Helium L1 transactions of each type were recorded each day.","method":"GET","path":"/api/helium/helium_l1_data/l1_transactions_by_type","url":"http://localhost:8138/api/helium/helium_l1_data/l1_transactions_by_type","category":"helium_l1_data","tag":"Helium L1 Data","filters":[{"name":"from","label":"From","type":"date","required":false,"description":"Inclusive start date. Must be paired with to, on or before 2023-04-18. Ranges are limited to 30 days.","default":"2023-03-20","options":null,"max":"2023-04-18"},{"name":"to","label":"To","type":"date","required":false,"description":"Inclusive end date. Must be paired with from and cannot be after 2023-04-18.","default":"2023-04-18","options":null,"max":"2023-04-18"},{"name":"l1_type","label":"Transaction type","type":"select","required":false,"description":"Helium L1 transaction type. Leave empty to include every type.","default":"","options":["add_gateway_v1","add_subnetwork_v1","assert_location_v1","assert_location_v2","coinbase_v1","consensus_group_failure_v1","consensus_group_v1","create_htlc_v1","dc_coinbase_v1","gen_gateway_v1","gen_price_oracle_v1","gen_validator_v1","oui_v1","payment_v1","payment_v2","poc_receipts_v1","poc_receipts_v2","poc_request_v1","price_oracle_v1","redeem_htlc_v1","rewards_v1","rewards_v2","routing_v1","security_coinbase_v1","security_exchange_v1","stake_validator_v1","state_channel_close_v1","state_channel_open_v1","subnetwork_fund_v1","subnetwork_rewards_v1","token_burn_exchange_rate_v1","token_burn_v1","token_redeem_v1","transfer_hotspot_v1","transfer_hotspot_v2","transfer_validator_stake_v1","unstake_validator_v1","update_gateway_oui_v1","update_subnetwork_v1","validator_heartbeat_v1","vars_v1"],"includeEmpty":true,"emptyLabel":"All types"}],"response_schema":[{"field":"date","type":"date","description":"Calendar date for this row, in YYYY-MM-DD format."},{"field":"transactionType","type":"string","description":"L1 transaction type, such as add_gateway_v1, assert_location_v1, or payment_v1."},{"field":"transactionCount","type":"integer","description":"Number of L1 transactions."}]}'>
     <div class="panel-eyebrow">Helium L1 Data</div>
     <h1>L1 Transactions by Type</h1>
     <p class="panel-desc">Shows how many Helium L1 transactions of each type were recorded each day.</p>
@@ -5995,24 +5995,8 @@
       <span class="req-pill optional">Optional</span>
       <span class="type-pill">string</span>
     </div>
-    <p class="method-param-desc">L1 transaction type, such as payment_v2 or poc_receipts_v2. Leave empty to include every type.</p>
+    <p class="method-param-desc">Helium L1 transaction type. Leave empty to include every type.</p>
     <p class="method-param-usage">Optional — omit unless you need to filter by this field.</p>
-  </article><article class="method-param">
-    <div class="method-param-head">
-      <code class="method-param-name">limit</code>
-      <span class="req-pill optional">Optional</span>
-      <span class="type-pill">integer</span>
-    </div>
-    <p class="method-param-desc">Pagination limit (SQL LIMIT).</p>
-    <p class="method-param-usage">If you omit it, the server uses <code>100</code>.</p>
-  </article><article class="method-param">
-    <div class="method-param-head">
-      <code class="method-param-name">offset</code>
-      <span class="req-pill optional">Optional</span>
-      <span class="type-pill">integer</span>
-    </div>
-    <p class="method-param-desc">Pagination offset (SQL OFFSET).</p>
-    <p class="method-param-usage">If you omit it, the server uses <code>0</code>.</p>
   </article></div></div>
     </details>
         <details class="section-card section-collapse methods-card">
@@ -6045,7 +6029,7 @@
           </div>
         </div>
         <div class="date-range-presets-row">
-          <div class="date-range-presets"><button type="button" class="date-range-preset" data-range-preset="last-week">Last week</button><button type="button" class="date-range-preset" data-range-preset="last-30">Last 30 days</button><button type="button" class="date-range-preset" data-range-preset="this-week">This week</button><button type="button" class="date-range-preset" data-range-preset="this-month">This month</button></div>
+
           <span class="date-range-max-note">Max 30 days · through 2023-04-18</span>
         </div>
       </div>
@@ -6076,15 +6060,9 @@
         </div>
       </div>
     </div>
-  </div><div class="filter-row" data-filter="l1_type" data-filter-type="text">
+  </div><div class="filter-row" data-filter="l1_type" data-filter-type="select">
     <label for="f-helium_l1_data-l1_transactions_by_type-l1_type">Transaction type</label>
-    <input id="f-helium_l1_data-l1_transactions_by_type-l1_type" type="text" data-name="l1_type" value="" placeholder="l1_type">
-  </div><div class="filter-row" data-filter="limit" data-filter-type="number">
-    <label for="f-helium_l1_data-l1_transactions_by_type-limit">Limit</label>
-    <input id="f-helium_l1_data-l1_transactions_by_type-limit" type="number" data-name="limit" value="100">
-  </div><div class="filter-row" data-filter="offset" data-filter-type="number">
-    <label for="f-helium_l1_data-l1_transactions_by_type-offset">Offset</label>
-    <input id="f-helium_l1_data-l1_transactions_by_type-offset" type="number" data-name="offset" value="0">
+    <select id="f-helium_l1_data-l1_transactions_by_type-l1_type" data-name="l1_type"><option value="">All types</option><option value="add_gateway_v1">add_gateway_v1</option><option value="add_subnetwork_v1">add_subnetwork_v1</option><option value="assert_location_v1">assert_location_v1</option><option value="assert_location_v2">assert_location_v2</option><option value="coinbase_v1">coinbase_v1</option><option value="consensus_group_failure_v1">consensus_group_failure_v1</option><option value="consensus_group_v1">consensus_group_v1</option><option value="create_htlc_v1">create_htlc_v1</option><option value="dc_coinbase_v1">dc_coinbase_v1</option><option value="gen_gateway_v1">gen_gateway_v1</option><option value="gen_price_oracle_v1">gen_price_oracle_v1</option><option value="gen_validator_v1">gen_validator_v1</option><option value="oui_v1">oui_v1</option><option value="payment_v1">payment_v1</option><option value="payment_v2">payment_v2</option><option value="poc_receipts_v1">poc_receipts_v1</option><option value="poc_receipts_v2">poc_receipts_v2</option><option value="poc_request_v1">poc_request_v1</option><option value="price_oracle_v1">price_oracle_v1</option><option value="redeem_htlc_v1">redeem_htlc_v1</option><option value="rewards_v1">rewards_v1</option><option value="rewards_v2">rewards_v2</option><option value="routing_v1">routing_v1</option><option value="security_coinbase_v1">security_coinbase_v1</option><option value="security_exchange_v1">security_exchange_v1</option><option value="stake_validator_v1">stake_validator_v1</option><option value="state_channel_close_v1">state_channel_close_v1</option><option value="state_channel_open_v1">state_channel_open_v1</option><option value="subnetwork_fund_v1">subnetwork_fund_v1</option><option value="subnetwork_rewards_v1">subnetwork_rewards_v1</option><option value="token_burn_exchange_rate_v1">token_burn_exchange_rate_v1</option><option value="token_burn_v1">token_burn_v1</option><option value="token_redeem_v1">token_redeem_v1</option><option value="transfer_hotspot_v1">transfer_hotspot_v1</option><option value="transfer_hotspot_v2">transfer_hotspot_v2</option><option value="transfer_validator_stake_v1">transfer_validator_stake_v1</option><option value="unstake_validator_v1">unstake_validator_v1</option><option value="update_gateway_oui_v1">update_gateway_oui_v1</option><option value="update_subnetwork_v1">update_subnetwork_v1</option><option value="validator_heartbeat_v1">validator_heartbeat_v1</option><option value="vars_v1">vars_v1</option></select>
   </div></div></div>
       </div>
         <div class="section-card sample-card sample-collapsed">
@@ -6164,7 +6142,7 @@
       return catalogBasePath() + "/" + encodeURIComponent(group) + "/" + encodeURIComponent(name);
     }
     const DEFAULT_FROM = "2026-09-01";
-    const DEFAULT_TO = "2026-09-27";
+    const DEFAULT_TO = "2026-09-28";
     const STORED_MAKERS = [];
 
 (function initDateRangePickers() {
@@ -6284,7 +6262,10 @@
       var thisMon = mondayOfWeek(today);
       start = addDays(thisMon, -7);
       end = addDays(thisMon, -1);
-    } else if (kind === "last-30") {
+    } else if (kind === "final-7") {
+      end = yesterday;
+      start = addDays(end, -6);
+    } else if (kind === "last-30" || kind === "final-30") {
       end = yesterday;
       start = addDays(end, -(MAX_RANGE_DAYS - 1));
     } else if (kind === "last-month") {

@@ -11,7 +11,6 @@ Trino-backed HTTP API for SQL in `sql/`. Each endpoint runs one `.sql` file with
 ```json
 {
   "success": true,
-  "query": "delegation/active_stake",
   "count": 1,
   "rows": [ { "...": "..." } ]
 }

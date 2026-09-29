@@ -115,7 +115,10 @@
       var thisMon = mondayOfWeek(today);
       start = addDays(thisMon, -7);
       end = addDays(thisMon, -1);
-    } else if (kind === "last-30") {
+    } else if (kind === "final-7") {
+      end = yesterday;
+      start = addDays(end, -6);
+    } else if (kind === "last-30" || kind === "final-30") {
       end = yesterday;
       start = addDays(end, -(MAX_RANGE_DAYS - 1));
     } else if (kind === "last-month") {

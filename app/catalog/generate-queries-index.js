@@ -393,7 +393,7 @@ const PARAM_METHOD_DOCS = {
   l1_type: {
     type: 'string',
     default: 'empty (all)',
-    desc: 'L1 transaction type, such as payment_v2 or poc_receipts_v2. Leave empty to include every type.',
+    desc: 'Helium L1 transaction type. Leave empty to include every type.',
   },
   l1_hash: {
     type: 'string',
@@ -991,6 +991,50 @@ function filter(name, label, type = 'text', extra = {}) {
   };
 }
 
+const L1_TRANSACTION_TYPES = [
+  'add_gateway_v1',
+  'add_subnetwork_v1',
+  'assert_location_v1',
+  'assert_location_v2',
+  'coinbase_v1',
+  'consensus_group_failure_v1',
+  'consensus_group_v1',
+  'create_htlc_v1',
+  'dc_coinbase_v1',
+  'gen_gateway_v1',
+  'gen_price_oracle_v1',
+  'gen_validator_v1',
+  'oui_v1',
+  'payment_v1',
+  'payment_v2',
+  'poc_receipts_v1',
+  'poc_receipts_v2',
+  'poc_request_v1',
+  'price_oracle_v1',
+  'redeem_htlc_v1',
+  'rewards_v1',
+  'rewards_v2',
+  'routing_v1',
+  'security_coinbase_v1',
+  'security_exchange_v1',
+  'stake_validator_v1',
+  'state_channel_close_v1',
+  'state_channel_open_v1',
+  'subnetwork_fund_v1',
+  'subnetwork_rewards_v1',
+  'token_burn_exchange_rate_v1',
+  'token_burn_v1',
+  'token_redeem_v1',
+  'transfer_hotspot_v1',
+  'transfer_hotspot_v2',
+  'transfer_validator_stake_v1',
+  'unstake_validator_v1',
+  'update_gateway_oui_v1',
+  'update_subnetwork_v1',
+  'validator_heartbeat_v1',
+  'vars_v1',
+];
+
 function dateFilters() {
   return [
     filter('from', 'From', 'date', {
@@ -1147,9 +1191,11 @@ function endpointFilters(group, name, dates, inferred) {
     if (name === 'l1_transactions_by_type') {
       return [
         ...l1Dates,
-        filter('l1_type', 'Transaction type'),
-        filter('limit', 'Limit', 'number', { default: '100' }),
-        filter('offset', 'Offset', 'number', { default: '0' }),
+        filter('l1_type', 'Transaction type', 'select', {
+          options: [...L1_TRANSACTION_TYPES],
+          includeEmpty: true,
+          emptyLabel: 'All types',
+        }),
       ];
     }
     return l1Dates;
@@ -1359,7 +1405,7 @@ function isDateRangePair(a, b) {
 const DATE_RANGE_CAL_ICON =
   '<svg class="date-range-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>';
 
-function renderDateRangeFilter(startF, endF, itemId) {
+function renderDateRangeFilter(startF, endF, itemId, options = {}) {
   const dateMode = startF.date_mode || endF.date_mode;
   const isInactiveDateMode = dateMode && dateMode !== 'month';
   const disabledAttr = isInactiveDateMode ? ' data-disabled="1"' : '';
@@ -1371,17 +1417,19 @@ function renderDateRangeFilter(startF, endF, itemId) {
   const startVal = esc(startF.default || '');
   const endVal = esc(endF.default || '');
   const maxNote = maxDate ? `Max 30 days · through ${esc(maxDate)}` : 'Max 30 days';
-  const presets = [
-    ['last-week', 'Last week'],
-    ['last-30', 'Last 30 days'],
-    ['this-week', 'This week'],
-    ['this-month', 'This month'],
-  ]
-    .map(
-      ([id, label]) =>
-        `<button type="button" class="date-range-preset" data-range-preset="${id}">${esc(label)}</button>`
-    )
-    .join('');
+  const presets = options.hidePresets
+    ? ''
+    : [
+        ['last-week', 'Last week'],
+        ['last-30', 'Last 30 days'],
+        ['this-week', 'This week'],
+        ['this-month', 'This month'],
+      ]
+        .map(
+          ([id, label]) =>
+            `<button type="button" class="date-range-preset" data-range-preset="${id}">${esc(label)}</button>`
+        )
+        .join('');
   return `<div class="filter-row filter-row-span-2 date-range-filter-row" data-filter-type="date-range"${dateModeAttrs}>
     <div class="date-range-picker"${disabledAttr}${maxAttr} id="dr-${esc(itemId)}">
       <div class="date-range-top">
@@ -1403,7 +1451,7 @@ function renderDateRangeFilter(startF, endF, itemId) {
           </div>
         </div>
         <div class="date-range-presets-row">
-          <div class="date-range-presets">${presets}</div>
+          ${presets ? `<div class="date-range-presets">${presets}</div>` : ''}
           <span class="date-range-max-note">${maxNote}</span>
         </div>
       </div>
@@ -1437,13 +1485,13 @@ function renderDateRangeFilter(startF, endF, itemId) {
   </div>`;
 }
 
-function renderFiltersForPanel(filters, itemId) {
+function renderFiltersForPanel(filters, itemId, options = {}) {
   const parts = [];
   for (let i = 0; i < filters.length; ) {
     const f = filters[i];
     const next = filters[i + 1];
     if (isDateRangePair(f, next)) {
-      parts.push(renderDateRangeFilter(f, next, itemId));
+      parts.push(renderDateRangeFilter(f, next, itemId, options));
       i += 2;
     } else {
       parts.push(renderFilter(f, itemId));
@@ -1548,7 +1596,7 @@ function renderPanel(item, isFirst) {
   const filtersHtml = item.filters.length
     ? `<div class="section-card params-card">
         <div class="section-card-head">Request</div>
-        <div class="section-card-body"><div class="filter-grid">${renderFiltersForPanel(item.filters, item.id)}</div></div>
+        <div class="section-card-body"><div class="filter-grid">${renderFiltersForPanel(item.filters, item.id, { hidePresets: item.category === 'helium_l1_data' })}</div></div>
       </div>`
     : '';
 
@@ -1962,6 +2010,7 @@ ${DATE_RANGE_PICKER_RUNTIME}
       const allRows = sampleRows(data);
       const rows = filterRowsByQuery(allRows, q);
       const preview = Object.assign({}, data, { count: rows.length, rows: rows });
+      delete preview.query;
       panel._sampleJson = JSON.stringify(preview, null, 2);
       const view = panel._sampleView || "json";
       body.className = "sample-body sample-loaded";
@@ -2172,6 +2221,7 @@ ${DATE_RANGE_PICKER_RUNTIME}
       try {
         const res = await fetch(buildUrl(panel), { signal: controller.signal });
         const data = await res.json();
+        if (data && typeof data === "object") delete data.query;
         if (!res.ok || data.success === false) throw new Error(data.error || res.statusText);
         await finishSampleProgress(panel, true);
         expandSamplePanel(panel);

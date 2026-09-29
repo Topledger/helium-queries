@@ -11,6 +11,49 @@ from typing import Any
 _PLACEHOLDER_RE = re.compile(r"\{([a-z_]+)\}")
 HELIUM_L1_MAX_DATE = date(2023, 4, 18)
 HELIUM_L1_DEFAULT_START = date(2023, 3, 20)
+HELIUM_L1_TRANSACTION_TYPES = {
+    "add_gateway_v1",
+    "add_subnetwork_v1",
+    "assert_location_v1",
+    "assert_location_v2",
+    "coinbase_v1",
+    "consensus_group_failure_v1",
+    "consensus_group_v1",
+    "create_htlc_v1",
+    "dc_coinbase_v1",
+    "gen_gateway_v1",
+    "gen_price_oracle_v1",
+    "gen_validator_v1",
+    "oui_v1",
+    "payment_v1",
+    "payment_v2",
+    "poc_receipts_v1",
+    "poc_receipts_v2",
+    "poc_request_v1",
+    "price_oracle_v1",
+    "redeem_htlc_v1",
+    "rewards_v1",
+    "rewards_v2",
+    "routing_v1",
+    "security_coinbase_v1",
+    "security_exchange_v1",
+    "stake_validator_v1",
+    "state_channel_close_v1",
+    "state_channel_open_v1",
+    "subnetwork_fund_v1",
+    "subnetwork_rewards_v1",
+    "token_burn_exchange_rate_v1",
+    "token_burn_v1",
+    "token_redeem_v1",
+    "transfer_hotspot_v1",
+    "transfer_hotspot_v2",
+    "transfer_validator_stake_v1",
+    "unstake_validator_v1",
+    "update_gateway_oui_v1",
+    "update_subnetwork_v1",
+    "validator_heartbeat_v1",
+    "vars_v1",
+}
 
 
 def _escape(value: str) -> str:
@@ -147,6 +190,8 @@ def default_params(raw: dict[str, Any] | None, group: str | None = None) -> dict
         raise ValueError("type must be join or uplink")
     if out["billing"] not in {"", "paid", "free"}:
         raise ValueError("billing must be paid or free")
+    if out["l1_type"] and out["l1_type"] not in HELIUM_L1_TRANSACTION_TYPES:
+        raise ValueError("l1_type must be a known Helium L1 transaction type")
     out["now_ts"] = int(raw.get("now_ts") or time.time())
     return out
 
